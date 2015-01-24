@@ -39,9 +39,18 @@ void cmd_print_usage(const char* executedFrom) {
 void cmd_print_info(const char* command) {
     if(strcmp(command, "makebanner") == 0) {
         printf("makebanner - Creates a .bnr file.\n");
-        printf("  -i/--image: PNG file to use as the banner image.\n");
-        printf("  -a/--audio: WAV file to use as the banner's tune.\n");
+        printf("  -i/--image: PNG file to use as the banner's image. Interchangeable with -ci.\n");
+        printf("  -a/--audio: WAV file to use as the banner's tune. Interchangeable with -ca.\n");
+        printf("  -ci/--cgfximage: CGFX file to use as the banner's image. Interchangeable with -i.\n");
+        printf("  -ca/--cwavaudio: CWAV file to use as the banner's tune. Interchangeable with -a.\n");
         printf("  -o/--output: File to output the created banner to.\n");
+    } else if(strcmp(command, "makesmdh") == 0) {
+        printf("makesmdh - Creates a .smdh/.icn file.\n");
+        printf("  -s/--shortdescription: Short description of the application.\n");
+        printf("  -l/--longdescription: Long description of the application.\n");
+        printf("  -p/--publisher: Publisher of the application.\n");
+        printf("  -i/--icon: PNG file to use as an icon.\n");
+        printf("  -o/--output: File to output the created SMDH/ICN to.\n");
     } else if(strcmp(command, "makecwav") == 0) {
         printf("makecwav - Creates a CWAV file from a WAV.\n");
         printf("  -i/--input: WAV file to convert.\n");
@@ -56,6 +65,7 @@ void cmd_print_info(const char* command) {
 void cmd_print_commands() {
     printf("Available commands:\n");
     cmd_print_info("makebanner");
+    cmd_print_info("makesmdh");
     cmd_print_info("makecwav");
     cmd_print_info("lz11");
 }
