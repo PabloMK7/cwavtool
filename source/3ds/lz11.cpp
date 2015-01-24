@@ -47,7 +47,7 @@ int lz11_get_occurence_length(u8* newPtr, int newLength, u8* oldPtr, int oldLeng
 
 u8* lz11_compress(u8* input, u32 inputSize, u32* size) {
     if (inputSize > 0xFFFFFF) {
-        printf("ERROR: LZ11 input is too large.");
+        printf("ERROR: LZ11 input is too large.\n");
         return NULL;
     }
 

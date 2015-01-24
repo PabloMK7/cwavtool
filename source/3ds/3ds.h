@@ -2,6 +2,7 @@
 #define __3DS_H__
 
 #include "cbmd.h"
+#include "cwav.h"
 #include "lz11.h"
 #include "util.h"
 

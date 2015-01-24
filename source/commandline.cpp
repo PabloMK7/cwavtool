@@ -40,7 +40,7 @@ void cmd_print_info(const char* command) {
     if(strcmp(command, "makebanner") == 0) {
         printf("makebanner - Creates a .bnr file.\n");
         printf("  -i/--image: PNG file to use as the banner image.\n");
-        printf("  -a/--audio: Audio file to use as the banner's tune.\n");
+        printf("  -a/--audio: WAV file to use as the banner's tune.\n");
         printf("  -o/--output: File to output the created banner to.\n");
     }
 }

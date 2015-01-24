@@ -2,6 +2,7 @@
 #include "commandline.h"
 #include "data.h"
 #include "types.h"
+#include "wav.h"
 
 #include <stdio.h>
 #include <malloc.h>
@@ -22,24 +23,18 @@ u8* convert_to_cgfx(const char* image, u32 width, u32 height, u32* size) {
     return ret;
 }
 
-u8* make_audio(const char* file, u32* size) {
-    // TODO: convert from a WAV file.
-    FILE* fd = fopen(file, "rb");
-    if(!fd) {
-        printf("ERROR: Could not load audio file.\n");
+u8* convert_to_cwav(const char* file, u32* size) {
+    WAV* wav = read_wav(file);
+    if(!wav) {
         return NULL;
     }
 
-    fseek(fd, 0, SEEK_END);
-    size_t length = (size_t) ftell(fd);
-    fseek(fd, 0, SEEK_SET);
+    u8* cwav = build_cwav(*wav, size);
 
-    u8* data = (u8*) malloc(length);
-    fread(data, 1, length, fd);
-    fclose(fd);
+    free(wav->dataBytes);
+    free(wav);
 
-    *size = (u32) length;
-    return data;
+    return cwav;
 }
 
 int make_banner(const char* image, const char* audio, const char* output) {
@@ -50,8 +45,8 @@ int make_banner(const char* image, const char* audio, const char* output) {
     }
 
     u32 cwavSize = 0;
-    u8* cwav = make_audio(audio, &cwavSize);
-    if(!audio) {
+    u8* cwav = convert_to_cwav(audio, &cwavSize);
+    if(!cwav) {
         return 2;
     }
 
@@ -75,7 +70,7 @@ int make_banner(const char* image, const char* audio, const char* output) {
     fwrite(bnr, 1, bnrSize, fd);
     fclose(fd);
     free(bnr);
-    printf("Created banner \"%s\".", output);
+    printf("Created banner \"%s\".\n", output);
     return 0;
 }
 
