@@ -3,7 +3,6 @@
 
 #include "cbmd.h"
 #include "lz11.h"
-#include "types.h"
 #include "util.h"
 
 #endif

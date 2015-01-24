@@ -1,12 +1,11 @@
 #include "3ds/3ds.h"
-#include "data.h"
 #include "commandline.h"
+#include "data.h"
+#include "types.h"
 
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
-
-#include <map>
 
 u8* convert_to_cgfx(const char* image, u32 width, u32 height, u32* size) {
     u32 convertedSize = 0;

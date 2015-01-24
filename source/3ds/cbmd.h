@@ -1,7 +1,7 @@
 #ifndef __CBMD_H__
 #define __CBMD_H__
 
-#include "types.h"
+#include "../types.h"
 
 typedef enum {
     CGFX_COMMON,
