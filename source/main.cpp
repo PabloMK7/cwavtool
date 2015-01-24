@@ -1,9 +1,12 @@
-#include "data.h"
 #include "3ds/3ds.h"
+#include "data.h"
+#include "commandline.h"
 
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+
+#include <map>
 
 u8* convert_to_cgfx(const char* image, u32 width, u32 height, u32* size) {
     u32 convertedSize = 0;
@@ -73,13 +76,30 @@ int make_banner(const char* image, const char* audio, const char* output) {
     fwrite(bnr, 1, bnrSize, fd);
     fclose(fd);
     free(bnr);
+    printf("Created banner \"%s\".", output);
     return 0;
 }
 
 int main(int argc, char* argv[]) {
-    if(argc != 4) {
-        printf("Usage: %s <banner png> <audio bcwav> <output file>", argv[0]);
+    if(argc < 2) {
+        cmd_print_usage(argv[0]);
+        return -1;
     }
 
-    return make_banner(argv[1], argv[2], argv[3]);
+    char* command = argv[1];
+    std::map<char*, char*, compare_strings> args = cmd_get_args(argc, argv);
+    if(strcmp(command, "makebanner") == 0) {
+        char* banner = cmd_find_arg(args, "i", "image");
+        char* audio = cmd_find_arg(args, "a", "audio");
+        char* output = cmd_find_arg(args, "o", "output");
+        if(!banner || !audio || !output) {
+            cmd_missing_args(command);
+            return -1;
+        }
+
+        return make_banner(banner, audio, output);
+    } else {
+        cmd_invalid_command(command);
+        return -1;
+    }
 }
