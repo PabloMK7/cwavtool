@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-u8* compress_lz11(u8* input, u32 inputSize, u32* size);
+u8* lz11_compress(u8* input, u32 inputSize, u32* size);
 
 #endif
