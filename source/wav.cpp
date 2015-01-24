@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 bool find_chunk(FILE* fd, const char* magic) {
     char curr[5] = {0};
@@ -20,7 +21,7 @@ bool find_chunk(FILE* fd, const char* magic) {
 WAV* read_wav(const char* file) {
     FILE* fd = fopen(file, "r");
     if(!fd) {
-        printf("ERROR: Could not open WAV file.\n");
+        printf("ERROR: Could not open WAV file: %s\n", strerror(errno));
         return NULL;
     }
 

@@ -42,12 +42,22 @@ void cmd_print_info(const char* command) {
         printf("  -i/--image: PNG file to use as the banner image.\n");
         printf("  -a/--audio: WAV file to use as the banner's tune.\n");
         printf("  -o/--output: File to output the created banner to.\n");
+    } else if(strcmp(command, "makecwav") == 0) {
+        printf("makecwav - Creates a CWAV file from a WAV.\n");
+        printf("  -i/--input: WAV file to convert.\n");
+        printf("  -o/--output: File to output the created CWAV to.\n");
+    } else if(strcmp(command, "lz11") == 0) {
+        printf("lz11 - Compresses a file with LZ11.\n");
+        printf("  -i/--input: File to compress.\n");
+        printf("  -o/--output: File to output the compressed data to.\n");
     }
 }
 
 void cmd_print_commands() {
     printf("Available commands:\n");
     cmd_print_info("makebanner");
+    cmd_print_info("makecwav");
+    cmd_print_info("lz11");
 }
 
 void cmd_missing_args(const char* command) {
