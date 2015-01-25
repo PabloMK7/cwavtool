@@ -68,7 +68,7 @@ u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format
 void utf8_to_utf16(u16* dst, const char* src, size_t max_len) {
     size_t n = 0;
     while(src[n]) {
-        dst[n] = (u16) src[n] << 8;
+        dst[n] = (u16) src[n];
         if(n++ >= max_len) {
             return;
         }
