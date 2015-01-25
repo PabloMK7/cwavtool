@@ -31,11 +31,6 @@ typedef struct {
 } InfoHeader;
 
 typedef struct {
-    char magic[4] = {'D', 'A', 'T', 'A'};
-    u32 length;
-} DataHeader;
-
-typedef struct {
     u32 flags = 0x7100;
     u32 offset;
 } ChannelDataPointer;
@@ -47,6 +42,11 @@ typedef struct {
     u32 unknown4 = 0;
     u32 padding = 0;
 } ChannelData;
+
+typedef struct {
+    char magic[4] = {'D', 'A', 'T', 'A'};
+    u32 length;
+} DataHeader;
 
 u8* build_cwav(WAV wav, u32* size) {
     Header header;

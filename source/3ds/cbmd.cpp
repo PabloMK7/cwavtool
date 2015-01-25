@@ -31,7 +31,7 @@ u8* build_cbmd_data(CBMD cbmd, u32* size, bool bnr) {
 
     u32 pad = 0;
     if(bnr) {
-        pad = 16 - (offset % 16);
+        pad = 0x10 - (offset % 0x10);
         offset += pad;
     }
 

@@ -11,7 +11,7 @@
 
 u8* convert_to_cgfx(const char* image, u32 width, u32 height, u32* size) {
     u32 convertedSize = 0;
-    u16* converted = image_to_tiles(image, width, height, &convertedSize);
+    u16* converted = image_to_tiles(image, width, height, RGBA4444, &convertedSize);
     if(converted == NULL) {
         return NULL;
     }
@@ -110,7 +110,7 @@ int make_banner(const char* image, const char* audio, char* cgfxFile, char* cwav
 }
 
 int make_smdh(char* shortDescription, char* longDescription, char* publisher, char* icon, char* output) {
-    u16* icon48 = image_to_tiles(icon, 48, 48, NULL);
+    u16* icon48 = image_to_tiles(icon, 48, 48, RGB565, NULL);
     if(icon48 == NULL) {
         return 1;
     }
