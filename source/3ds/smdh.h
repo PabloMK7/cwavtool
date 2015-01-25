@@ -44,38 +44,37 @@ typedef struct {
     u8 reserved6 = 0;
 } SMDHGameRatings;
 
-typedef struct _region_lock {
-    _region_lock() : japan(true), northAmerica(true), europe(true), australia(true), china(true), korea(true), taiwan(true) {}
+typedef enum {
+    JAPAN = 0x01,
+    NORTH_AMERICA = 0x02,
+    EUROPE = 0x04,
+    AUSTRALIA = 0x08,
+    CHINA = 0x10,
+    KOREA = 0x20,
+    TAIWAN = 0x40,
 
-    bool japan : 1;
-    bool northAmerica : 1;
-    bool europe : 1;
-    bool australia : 1;
-    bool china : 1;
-    bool korea : 1;
-    bool taiwan : 1;
-} SMDHRegionLock;
+    // Not a bitmask, but a value.
+    REGION_FREE = 0x7FFFFFFF
+} SMDHRegionFlag;
 
-typedef struct _flags {
-    _flags() : visible(true), autoBoot(false), allow3d(true), requireEula(false), autoSaveOnExit(false), useExtendedBanner(false), ratingRequired(false), useSaveData(false), recordUsage(true), disableSaveBackups(false) {}
-
-    bool visible : 1;
-    bool autoBoot : 1;
-    bool allow3d : 1;
-    bool requireEula : 1;
-    bool autoSaveOnExit : 1;
-    bool useExtendedBanner : 1;
-    bool ratingRequired : 1;
-    bool useSaveData : 1;
-    bool recordUsage : 1;
-    bool disableSaveBackups : 1;
-} SMDHFlags;
+typedef enum {
+    VISIBLE = 0x0001,
+    AUTO_BOOT = 0x0002,
+    ALLOW_3D = 0x0004,
+    REQUIRE_EULA = 0x0008,
+    AUTO_SAVE_ON_EXIT = 0x0010,
+    USE_EXTENDED_BANNER = 0x0020,
+    RATING_REQUIED = 0x0040,
+    USE_SAVE_DATA = 0x0080,
+    RECORD_USAGE = 0x0100,
+    DISABLE_SAVE_BACKUPS = 0x0400
+} SMDHFlag;
 
 typedef struct {
     SMDHGameRatings gameRatings;
-    SMDHRegionLock regionLock;
+    u32 regionLock = REGION_FREE;
     u8 matchMakerId[0xC] = {0};
-    SMDHFlags flags;
+    u32 flags = VISIBLE | ALLOW_3D | RECORD_USAGE;
     u16 eulaVersion = 0;
     u16 reserved1 = 0;
     u32 optimalBannerFrame = 0;
