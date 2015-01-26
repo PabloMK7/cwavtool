@@ -27,7 +27,7 @@ typedef struct {
     u32 cwavSize = 0;
 } CBMD;
 
-u8* build_cbmd(CBMD cbmd, u32* size);
-u8* build_bnr(CBMD cbmd, u32* size);
+u8* cbmd_build(CBMD cbmd, u32* size);
+u8* bnr_build(CBMD cbmd, u32* size);
 
 #endif

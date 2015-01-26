@@ -1,5 +1,5 @@
-#ifndef __COMMANDLINE_H__
-#define __COMMANDLINE_H__
+#ifndef __CMD_H__
+#define __CMD_H__
 
 #include <string.h>
 
@@ -18,5 +18,6 @@ void cmd_print_info(const char* command);
 void cmd_print_commands();
 void cmd_missing_args(const char* command);
 void cmd_invalid_command(const char* command);
+int cmd_process_command(int argc, char* argv[]);
 
 #endif

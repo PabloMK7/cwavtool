@@ -1,7 +1,7 @@
 #ifndef __WAV_H__
 #define __WAV_H__
 
-#include "types.h"
+#include "../types.h"
 
 typedef struct {
     char chunkId[4];
@@ -23,15 +23,16 @@ typedef struct {
 typedef struct {
     char chunkId[4];
     u32 chunkSize;
+    u8* data;
 } Data;
 
 typedef struct {
     Riff riff;
     Format format;
     Data data;
-    u8* dataBytes;
 } WAV;
 
-WAV* read_wav(const char* file);
+WAV* wav_read(const char* file);
+void wav_free(WAV* wav);
 
 #endif

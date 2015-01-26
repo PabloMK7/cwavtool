@@ -5,7 +5,7 @@
 #include <string.h>
 #include <errno.h>
 
-bool find_chunk(FILE* fd, const char* magic) {
+bool wav_find_chunk(FILE* fd, const char* magic) {
     char curr[5] = {0};
     while(strcmp(curr, magic) != 0) {
         u32 read = (u32) fread(curr, 1, 4, fd);
@@ -18,14 +18,14 @@ bool find_chunk(FILE* fd, const char* magic) {
     return true;
 }
 
-WAV* read_wav(const char* file) {
+WAV* wav_read(const char* file) {
     FILE* fd = fopen(file, "r");
     if(!fd) {
         printf("ERROR: Could not open WAV file: %s\n", strerror(errno));
         return NULL;
     }
 
-    if(!find_chunk(fd, "RIFF")) {
+    if(!wav_find_chunk(fd, "RIFF")) {
         printf("ERROR: Could not find WAV RIFF chunk.\n");
         return NULL;
     }
@@ -33,7 +33,7 @@ WAV* read_wav(const char* file) {
     Riff riff;
     fread(&riff, sizeof(Riff), 1, fd);
 
-    if(!find_chunk(fd, "fmt ")) {
+    if(!wav_find_chunk(fd, "fmt ")) {
         printf("ERROR: Could not find WAV format chunk.\n");
         return NULL;
     }
@@ -41,16 +41,16 @@ WAV* read_wav(const char* file) {
     Format format;
     fread(&format, sizeof(Format), 1, fd);
 
-    if(!find_chunk(fd, "data")) {
+    if(!wav_find_chunk(fd, "data")) {
         printf("ERROR: Could not find WAV data chunk.\n");
         return NULL;
     }
 
     Data data;
-    fread(&data, sizeof(Data), 1, fd);
-
-    u8* dataBytes = (u8*) malloc(data.chunkSize);
-    fread(dataBytes, 1, data.chunkSize, fd);
+    fread(&(data.chunkId), sizeof(data.chunkId), 1, fd);
+    fread(&(data.chunkSize), sizeof(data.chunkSize), 1, fd);
+    data.data = (u8*) malloc(data.chunkSize);
+    fread(data.data, 1, data.chunkSize, fd);
 
     fclose(fd);
 
@@ -58,6 +58,12 @@ WAV* read_wav(const char* file) {
     wav->riff = riff;
     wav->format = format;
     wav->data = data;
-    wav->dataBytes = dataBytes;
     return wav;
+}
+
+void wav_free(WAV* wav) {
+    if(wav != NULL) {
+        free(wav->data.data);
+        free(wav);
+    }
 }

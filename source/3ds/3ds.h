@@ -4,6 +4,8 @@
 #include "cbmd.h"
 #include "cwav.h"
 #include "smdh.h"
+
+#include "data.h"
 #include "lz11.h"
 #include "util.h"
 

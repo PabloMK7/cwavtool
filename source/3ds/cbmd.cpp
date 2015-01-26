@@ -13,11 +13,11 @@ typedef struct {
     u32 cwavOffset = 0;
 } CBMDHeader;
 
-u8* build_cbmd_data(CBMD cbmd, u32* size, bool bnr) {
+u8* cbmd_build_data(CBMD cbmd, u32* size, bool bnr) {
     u32 headerSize = sizeof(CBMDHeader);
     CBMDHeader header;
 
-    u8* compressedCGFXs[14] = {0};
+    u8* compressedCGFXs[14] = {NULL};
     u32 compressedCGFXSizes[14] = {0};
 
     u32 offset = headerSize;
@@ -72,10 +72,10 @@ u8* build_cbmd_data(CBMD cbmd, u32* size, bool bnr) {
     return output;
 }
 
-u8* build_cbmd(CBMD cbmd, u32* size) {
-    return build_cbmd_data(cbmd, size, false);
+u8* cbmd_build(CBMD cbmd, u32* size) {
+    return cbmd_build_data(cbmd, size, false);
 }
 
-u8* build_bnr(CBMD cbmd, u32* size) {
-    return build_cbmd_data(cbmd, size, true);
+u8* bnr_build(CBMD cbmd, u32* size) {
+    return cbmd_build_data(cbmd, size, true);
 }
