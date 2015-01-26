@@ -7,6 +7,16 @@ u8 TILE_ORDER[64] = { 0,  1,  8,  9,  2,  3,  10, 11, 16, 17, 24, 25, 18, 19, 26
         32, 33, 40, 41, 34, 35, 42, 43, 48, 49, 56, 57, 50, 51, 58, 59,
         36, 37, 44, 45, 38, 39, 46, 47, 52, 53, 60, 61, 54, 55, 62, 63 };
 
+void utf8_to_utf16(u16* dst, const char* src, size_t max_len) {
+    size_t n = 0;
+    while(src[n]) {
+        dst[n] = (u16) src[n];
+        if(n++ >= max_len) {
+            return;
+        }
+    }
+}
+
 u16 pack_color(u8 r, u8 g, u8 b, u8 a, PixelFormat format) {
     if(format == RGB565) {
         float alpha = a / 255.0f;
@@ -63,14 +73,4 @@ u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format
     }
 
     return converted;
-}
-
-void utf8_to_utf16(u16* dst, const char* src, size_t max_len) {
-    size_t n = 0;
-    while(src[n]) {
-        dst[n] = (u16) src[n];
-        if(n++ >= max_len) {
-            return;
-        }
-    }
 }

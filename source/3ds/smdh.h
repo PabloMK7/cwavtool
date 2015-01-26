@@ -24,25 +24,18 @@ typedef struct {
     u16 publisher[0x40] = {0};
 } SMDHTitle;
 
-typedef struct {
-    // TODO: values...
-    u8 cero = 0;
-    u8 esrb = 0;
-    u8 reserved0 = 0;
-    u8 usk = 0;
-    u8 pegiGen = 0;
-    u8 reserved1 = 0;
-    u8 pegiPrt = 0;
-    u8 pegiBbfc = 0;
-    u8 cob = 0;
-    u8 grb = 0;
-    u8 cgsrr = 0;
-    u8 reserved2 = 0;
-    u8 reserved3 = 0;
-    u8 reserved4 = 0;
-    u8 reserved5 = 0;
-    u8 reserved6 = 0;
-} SMDHGameRatings;
+// TODO: Provide values to set ratings to.
+typedef enum {
+    CERO = 0,
+    ESRB = 1,
+    USK = 3,
+    PEGI_GEN = 4,
+    PEGI_PTR = 6,
+    PEGI_BBFC = 7,
+    COB = 8,
+    GRB = 9,
+    CGSRR = 10
+} SMDHGameRating;
 
 typedef enum {
     JAPAN = 0x01,
@@ -71,7 +64,7 @@ typedef enum {
 } SMDHFlag;
 
 typedef struct {
-    SMDHGameRatings gameRatings;
+    u8 gameRatings[0x10] = {0};
     u32 regionLock = REGION_FREE;
     u8 matchMakerId[0xC] = {0};
     u32 flags = VISIBLE | ALLOW_3D | RECORD_USAGE;
