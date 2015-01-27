@@ -110,7 +110,7 @@ int cmd_make_banner(const char* image, const char* audio, char* cgfxFile, char* 
     return 0;
 }
 
-int cmd_make_smdh(char* shortDescription, char* longDescription, char* publisher, char* icon, char* output) {
+int cmd_make_smdh(char* shortTitle, char* longTitle, char* publisher, char* icon, char* output) {
     u16* icon48 = image_to_tiles(icon, 48, 48, RGB565, NULL);
     if(icon48 == NULL) {
         return 1;
@@ -125,8 +125,8 @@ int cmd_make_smdh(char* shortDescription, char* longDescription, char* publisher
 
     SMDH smdh;
     for(int i = 0; i < 0x10; i++) {
-        utf8_to_utf16(smdh.titles[i].shortDescription, shortDescription, 0x40);
-        utf8_to_utf16(smdh.titles[i].longDescription, longDescription, 0x80);
+        utf8_to_utf16(smdh.titles[i].shortTitle, shortTitle, 0x40);
+        utf8_to_utf16(smdh.titles[i].longTitle, longTitle, 0x80);
         utf8_to_utf16(smdh.titles[i].publisher, publisher, 0x40);
     }
 
@@ -251,8 +251,8 @@ void cmd_print_info(const char* command) {
         printf("  -o/--output: File to output the created banner to.\n");
     } else if(strcmp(command, "makesmdh") == 0) {
         printf("makesmdh - Creates a .smdh/.icn file.\n");
-        printf("  -s/--shortdescription: Short description of the application.\n");
-        printf("  -l/--longdescription: Long description of the application.\n");
+        printf("  -s/--shorttitle: Short title of the application.\n");
+        printf("  -l/--longtitle: Long title of the application.\n");
         printf("  -p/--publisher: Publisher of the application.\n");
         printf("  -i/--icon: PNG file to use as an icon.\n");
         printf("  -o/--output: File to output the created SMDH/ICN to.\n");
@@ -306,17 +306,17 @@ int cmd_process_command(int argc, char* argv[]) {
 
         return cmd_make_banner(banner, audio, cgfxFile, cwavFile, output);
     } else if(strcmp(command, "makesmdh") == 0) {
-        char* shortDescription = cmd_find_arg(args, "s", "shortdescription");
-        char* longDescription = cmd_find_arg(args, "l", "longdescription");
+        char* shortTitle = cmd_find_arg(args, "s", "shorttitle");
+        char* longTitle = cmd_find_arg(args, "l", "longtitle");
         char* publisher = cmd_find_arg(args, "p", "publisher");
         char* icon = cmd_find_arg(args, "i", "icon");
         char* output = cmd_find_arg(args, "o", "output");
-        if(!shortDescription || !longDescription || !publisher || !icon || !output) {
+        if(!shortTitle || !longTitle || !publisher || !icon || !output) {
             cmd_missing_args(command);
             return -1;
         }
 
-        return cmd_make_smdh(shortDescription, longDescription, publisher, icon, output);
+        return cmd_make_smdh(shortTitle, longTitle, publisher, icon, output);
     } else if(strcmp(command, "makecwav") == 0) {
         char* input = cmd_find_arg(args, "i", "input");
         char* output = cmd_find_arg(args, "o", "output");

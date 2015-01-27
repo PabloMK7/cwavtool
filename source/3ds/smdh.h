@@ -41,7 +41,7 @@ typedef enum {
     TAIWAN = 0x40,
 
     // Not a bitmask, but a value.
-            REGION_FREE = 0x7FFFFFFF
+    REGION_FREE = 0x7FFFFFFF
 } SMDHRegionFlag;
 
 typedef enum {
@@ -58,8 +58,8 @@ typedef enum {
 } SMDHFlag;
 
 typedef struct {
-    u16 shortDescription[0x40] = {0};
-    u16 longDescription[0x80] = {0};
+    u16 shortTitle[0x40] = {0};
+    u16 longTitle[0x80] = {0};
     u16 publisher[0x40] = {0};
 } SMDHTitle;
 
