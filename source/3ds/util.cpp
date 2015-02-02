@@ -33,44 +33,53 @@ u16 pack_color(u8 r, u8 g, u8 b, u8 a, PixelFormat format) {
     }
 }
 
+u8* load_image(const char* image, u32 width, u32 height) {
+	unsigned char *img;
+	unsigned int imgWidth, imgHeight;
+	if(lodepng_decode32_file(&img, &imgWidth, &imgHeight, image)) {
+		printf("ERROR: Could not load png file.\n");
+		return NULL;
+	}
+
+	if(width == 0) {
+		width = imgWidth;
+	}
+
+	if(height == 0) {
+		height = imgHeight;
+	}
+
+	if(imgWidth != width || imgHeight != height) {
+		printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
+		return NULL;
+	}
+
+	return img;
+}
+
+u16* image_data_to_tiles(u8* img, u32 width, u32 height, PixelFormat format, u32* size) {
+	u16* converted = (u16*) malloc(width * height * sizeof(u16));
+	u32 n = 0;
+	for(int y = 0; y < height; y += 8) {
+		for(int x = 0; x < width; x += 8) {
+			for(int k = 0; k < 8 * 8; k++) {
+				u32 xx = (u32) (TILE_ORDER[k] & 0x7);
+				u32 yy = (u32) (TILE_ORDER[k] >> 3);
+
+				u8* pixel = img + (((y + yy) * width + (x + xx)) * 4);
+				converted[n++] = pack_color(pixel[0], pixel[1], pixel[2], pixel[3], format);
+			}
+		}
+	}
+
+	if(size != NULL) {
+		*size = width * height * (u32) sizeof(u16);
+	}
+
+	return converted;
+}
+
 u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format, u32* size) {
-    unsigned char* img;
-    unsigned int imgWidth, imgHeight;
-    if(lodepng_decode32_file(&img, &imgWidth, &imgHeight, image)) {
-        printf("ERROR: Could not load png file.\n");
-        return NULL;
-    }
-
-    if(width == 0) {
-        width = imgWidth;
-    }
-
-    if(height == 0) {
-        height = imgHeight;
-    }
-
-    if(imgWidth != width || imgHeight != height) {
-        printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
-        return NULL;
-    }
-
-    u16* converted = (u16*) malloc(width * height * sizeof(u16));
-    u32 n = 0;
-    for(int y = 0; y < height; y += 8) {
-        for(int x = 0; x < width; x += 8) {
-            for(int k = 0; k < 8 * 8; k++) {
-                u32 xx = (u32) (TILE_ORDER[k] & 0x7);
-                u32 yy = (u32) (TILE_ORDER[k] >> 3);
-
-                u8* pixel = img + (((y + yy) * width + (x + xx)) * 4);
-                converted[n++] = pack_color(pixel[0], pixel[1], pixel[2], pixel[3], format);
-            }
-        }
-    }
-
-    if(size != NULL) {
-        *size = width * height * (u32) sizeof(u16);
-    }
-
-    return converted;
+	u8* img = load_image(image, width, height);
+	return image_data_to_tiles(img, width, height, format, size);
 }

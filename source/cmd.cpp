@@ -111,17 +111,55 @@ int cmd_make_banner(const char* image, const char* audio, char* cgfxFile, char* 
 }
 
 int cmd_make_smdh(char* shortTitle, char* longTitle, char* publisher, char* icon, char* output) {
-    u16* icon48 = image_to_tiles(icon, 48, 48, RGB565, NULL);
+	u8* icon48Data = load_image(icon, 48, 48);
+	if(icon48Data == NULL) {
+		return 1;
+	}
+
+    u16* icon48 = image_data_to_tiles(icon48Data, 48, 48, RGB565, NULL);
     if(icon48 == NULL) {
         return 1;
     }
 
-    u16 icon24[24 * 24];
-    for(int y = 0; y < 24; y++) {
-        for(int x = 0; x < 24; x++) {
-            icon24[y * 24 + x] = icon48[y * 48 + x];
+    u8 icon24Data[24 * 24 * 4];
+    for(int y = 0; y < 48; y += 2) {
+        for(int x = 0; x < 48; x += 2) {
+			int i1 = (y * 48 + x) * 4;
+			u8 r1 = icon48Data[i1 + 0];
+			u8 g1 = icon48Data[i1 + 1];
+			u8 b1 = icon48Data[i1 + 2];
+			u8 a1 = icon48Data[i1 + 3];
+
+			int i2 = (y * 48 + (x + 1)) * 4;
+			u8 r2 = icon48Data[i2 + 0];
+			u8 g2 = icon48Data[i2 + 1];
+			u8 b2 = icon48Data[i2 + 2];
+			u8 a2 = icon48Data[i2 + 3];
+
+			int i3 = ((y + 1) * 48 + x) * 4;
+			u8 r3 = icon48Data[i3 + 0];
+			u8 g3 = icon48Data[i3 + 1];
+			u8 b3 = icon48Data[i3 + 2];
+			u8 a3 = icon48Data[i3 + 3];
+
+			int i4 = ((y + 1) * 48 + (x + 1)) * 4;
+			u8 r4 = icon48Data[i4 + 0];
+			u8 g4 = icon48Data[i4 + 1];
+			u8 b4 = icon48Data[i4 + 2];
+			u8 a4 = icon48Data[i4 + 3];
+
+			int id = ((y / 2) * 24 + (x / 2)) * 4;
+			icon24Data[id + 0] = (u8) ((r1 + r2 + r3 + r4) / 4);
+			icon24Data[id + 1] = (u8) ((g1 + g2 + g3 + g4) / 4);
+			icon24Data[id + 2] = (u8) ((b1 + b2 + b3 + b4) / 4);
+			icon24Data[id + 3] = (u8) ((a1 + a2 + a3 + a4) / 4);
         }
     }
+
+	u16* icon24 = image_data_to_tiles(icon24Data, 24, 24, RGB565, NULL);
+	if(icon24 == NULL) {
+		return 1;
+	}
 
     SMDH smdh;
     for(int i = 0; i < 0x10; i++) {
