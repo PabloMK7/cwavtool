@@ -4,6 +4,11 @@
 #include "pc/wav.h"
 #include "types.h"
 
+#include <string.h>
+
+#include <map>
+#include <vector>
+
 u8* convert_to_cgfx(const char* image, u32 width, u32 height, u32* size) {
     u32 convertedSize = 0;
     u16* converted = image_to_tiles(image, width, height, RGBA4444, &convertedSize);
@@ -39,7 +44,7 @@ u8* convert_to_cwav(const char* file, u32* size) {
     return ret;
 }
 
-int cmd_make_banner(const char* image, const char* audio, char* cgfxFile, char* cwavFile, const char* output) {
+int cmd_make_banner(const char* image, const char* audio, const char* cgfxFile, const char* cwavFile, const char* output) {
     u32 cgfxSize = 0;
     u8* cgfx = NULL;
     if(cgfxFile != NULL) {
@@ -110,7 +115,7 @@ int cmd_make_banner(const char* image, const char* audio, char* cgfxFile, char* 
     return 0;
 }
 
-int cmd_make_smdh(char* shortTitle, char* longTitle, char* publisher, char* icon, char* output) {
+int cmd_make_smdh(const char* shortTitle, const char* longTitle, const char* publisher, const char* icon, SMDHRegionFlag regionFlags, u64 matchMakerId, u32 smdhFlags, u16 eulaVersion, u32 optimalBannerFrame, u32 streetpassId, const char* output) {
 	u8* icon48Data = load_image(icon, 48, 48);
 	if(icon48Data == NULL) {
 		return 1;
@@ -168,6 +173,13 @@ int cmd_make_smdh(char* shortTitle, char* longTitle, char* publisher, char* icon
         utf8_to_utf16(smdh.titles[i].publisher, publisher, 0x40);
     }
 
+    smdh.settings.regionLock = regionFlags;
+    memcpy(smdh.settings.matchMakerId, &matchMakerId, 0xC);
+    smdh.settings.flags = smdhFlags;
+    smdh.settings.eulaVersion = eulaVersion;
+    smdh.settings.optimalBannerFrame = optimalBannerFrame;
+    smdh.settings.streetpassId = streetpassId;
+
     memcpy(smdh.largeIcon, icon48, 0x1200);
     memcpy(smdh.smallIcon, icon24, 0x480);
     free(icon48);
@@ -185,7 +197,7 @@ int cmd_make_smdh(char* shortTitle, char* longTitle, char* publisher, char* icon
     return 0;
 }
 
-int cmd_make_cwav(char* input, char* output) {
+int cmd_make_cwav(const char* input, const char* output) {
     u32 cwavSize = 0;
     u8* cwav = convert_to_cwav(input, &cwavSize);
     if(!cwav) {
@@ -207,7 +219,7 @@ int cmd_make_cwav(char* input, char* output) {
     return 0;
 }
 
-int cmd_lz11(char* input, char* output) {
+int cmd_lz11(const char* input, const char* output) {
     FILE* in = fopen(input, "r");
     if(!in) {
         printf("ERROR: Could not open input file: %s\n", strerror(errno));
@@ -243,6 +255,12 @@ int cmd_lz11(char* input, char* output) {
     return 0;
 }
 
+struct compare_strings {
+    bool operator()(char const *a, char const *b) {
+        return strcmp(a, b) < 0;
+    }
+};
+
 std::map<char*, char*, compare_strings> cmd_get_args(int argc, char* argv[]) {
     std::map<char*, char*, compare_strings> args;
     for(int i = 0; i < argc; i++) {
@@ -255,7 +273,7 @@ std::map<char*, char*, compare_strings> cmd_get_args(int argc, char* argv[]) {
     return args;
 }
 
-char* cmd_find_arg(std::map<char*, char*, compare_strings> args, const char* shortOpt, const char* longOpt) {
+const char* cmd_find_arg(std::map<char*, char*, compare_strings> args, const char* shortOpt, const char* longOpt, const char* def) {
     char sopt[strlen(shortOpt) + 2];
     sprintf(sopt, "-%s", shortOpt);
     char lopt[strlen(longOpt) + 3];
@@ -271,12 +289,32 @@ char* cmd_find_arg(std::map<char*, char*, compare_strings> args, const char* sho
         return (*match).second;
     }
 
-    return NULL;
+    return def;
 }
 
-void cmd_print_usage(const char* executedFrom) {
-    printf("Usage: %s <command> <args>\n", executedFrom);
-    cmd_print_commands();
+std::vector<const char*> cmd_parse_list(const char* list) {
+    std::vector<const char*> ret;
+    const char* curr = list;
+    const char* found = NULL;
+    while((found = strchr(curr, ',')) != NULL) {
+        char* substr = (char*) malloc(found - curr + 1);
+        memcpy(substr, curr, found - curr);
+        ret.push_back(substr);
+
+        curr = found + 1;
+    }
+
+    if(strlen(curr) > 0) {
+        ret.push_back(strdup(curr));
+    }
+
+    return ret;
+}
+
+void cmd_free_list(std::vector<const char*> list) {
+    for(std::vector<const char*>::iterator it = list.begin(); it != list.end(); it++) {
+        free((void*) *it);
+    }
 }
 
 void cmd_print_info(const char* command) {
@@ -293,6 +331,14 @@ void cmd_print_info(const char* command) {
         printf("  -l/--longtitle: Long title of the application.\n");
         printf("  -p/--publisher: Publisher of the application.\n");
         printf("  -i/--icon: PNG file to use as an icon.\n");
+        printf("  -r/--regions: Optional. Comma separated list of regions to lock the SMDH to.\n");
+        printf("     Valid regions: regionfree, japan, northamerica, europe, australia, china, korea, taiwan.\n");
+        printf("  -mmid/--matchmakerid: Optional. Match maker ID of the SMDH.\n");
+        printf("  -f/--flags: Optional. Flags to apply to the SMDH file.\n");
+        printf("     Valid flags: visible, autoboot, allow3d, requireeula, autosave, extendedbanner, ratingrequired, savedata, recordusage, nosavebackups.\n");
+        printf("  -ev/--eulaversion: Optional. Version of the EULA required to be accepted before launching.\n");
+        printf("  -obf/--optimalbannerframe: Optional. Optimal frame of the accompanying banner.\n");
+        printf("  -spid/--streetpassid: Optional. Streetpass ID of the SMDH.\n");
         printf("  -o/--output: File to output the created SMDH/ICN to.\n");
     } else if(strcmp(command, "makecwav") == 0) {
         printf("makecwav - Creates a CWAV file from a WAV.\n");
@@ -313,8 +359,18 @@ void cmd_print_commands() {
     cmd_print_info("lz11");
 }
 
+void cmd_print_usage(const char* executedFrom) {
+    printf("Usage: %s <command> <args>\n", executedFrom);
+    cmd_print_commands();
+}
+
 void cmd_missing_args(const char* command) {
     printf("Missing arguments for command \"%s\".\n", command);
+    cmd_print_info(command);
+}
+
+void cmd_invalid_arg(const char* argument, const char* command) {
+    printf("Invalid value for argument \"%s\" in command \"%s\".\n", argument, command);
     cmd_print_info(command);
 }
 
@@ -332,11 +388,11 @@ int cmd_process_command(int argc, char* argv[]) {
     char* command = argv[1];
     std::map<char*, char*, compare_strings> args = cmd_get_args(argc, argv);
     if(strcmp(command, "makebanner") == 0) {
-        char *banner = cmd_find_arg(args, "i", "image");
-        char *audio = cmd_find_arg(args, "a", "audio");
-        char *cgfxFile = cmd_find_arg(args, "ci", "cgfximage");
-        char *cwavFile = cmd_find_arg(args, "ca", "cwavaudio");
-        char *output = cmd_find_arg(args, "o", "output");
+        const char *banner = cmd_find_arg(args, "i", "image", NULL);
+        const char *audio = cmd_find_arg(args, "a", "audio", NULL);
+        const char *cgfxFile = cmd_find_arg(args, "ci", "cgfximage", NULL);
+        const char *cwavFile = cmd_find_arg(args, "ca", "cwavaudio", NULL);
+        const char *output = cmd_find_arg(args, "o", "output", NULL);
         if(!(banner || cgfxFile) || !(audio || cwavFile) || !output) {
             cmd_missing_args(command);
             return -1;
@@ -344,20 +400,83 @@ int cmd_process_command(int argc, char* argv[]) {
 
         return cmd_make_banner(banner, audio, cgfxFile, cwavFile, output);
     } else if(strcmp(command, "makesmdh") == 0) {
-        char* shortTitle = cmd_find_arg(args, "s", "shorttitle");
-        char* longTitle = cmd_find_arg(args, "l", "longtitle");
-        char* publisher = cmd_find_arg(args, "p", "publisher");
-        char* icon = cmd_find_arg(args, "i", "icon");
-        char* output = cmd_find_arg(args, "o", "output");
+        const char* shortTitle = cmd_find_arg(args, "s", "shorttitle", NULL);
+        const char* longTitle = cmd_find_arg(args, "l", "longtitle", NULL);
+        const char* publisher = cmd_find_arg(args, "p", "publisher", NULL);
+        const char* icon = cmd_find_arg(args, "i", "icon", NULL);
+        const char* output = cmd_find_arg(args, "o", "output", NULL);
         if(!shortTitle || !longTitle || !publisher || !icon || !output) {
             cmd_missing_args(command);
             return -1;
         }
 
-        return cmd_make_smdh(shortTitle, longTitle, publisher, icon, output);
+        std::vector<const char*> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
+        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0"));
+        std::vector<const char*> flags = cmd_parse_list(cmd_find_arg(args, "f", "flags", "visible,allow3d,recordusage"));
+        u16 eulaVersion = (u16) atoi(cmd_find_arg(args, "ev", "eulaversion", "0"));
+        u32 optimalBannerFrame = (u32) atoll(cmd_find_arg(args, "obf", "optimalbannerframe", "0"));
+        u32 streetpassId = (u32) atoll(cmd_find_arg(args, "spid", "streetpassid", "0"));
+
+        u32 regionFlags = 0;
+        for(std::vector<const char*>::iterator it = regions.begin(); it != regions.end(); it++) {
+            const char* region = *it;
+            if(strcmp(region, "regionfree") == 0) {
+                regionFlags = REGION_FREE;
+                break;
+            } else if(strcmp(region, "japan") == 0) {
+                regionFlags |= JAPAN;
+            } else if(strcmp(region, "northamerica") == 0) {
+                regionFlags |= NORTH_AMERICA;
+            } else if(strcmp(region, "europe") == 0) {
+                regionFlags |= EUROPE;
+            } else if(strcmp(region, "australia") == 0) {
+                regionFlags |= AUSTRALIA;
+            } else if(strcmp(region, "china") == 0) {
+                regionFlags |= CHINA;
+            } else if(strcmp(region, "korea") == 0) {
+                regionFlags |= KOREA;
+            } else if(strcmp(region, "taiwan") == 0) {
+                regionFlags |= TAIWAN;
+            } else {
+                cmd_invalid_arg("regions", command);
+            }
+        }
+
+        u32 smdhFlags = 0;
+        for(std::vector<const char*>::iterator it = flags.begin(); it != flags.end(); it++) {
+            const char* flag = *it;
+            if(strcmp(flag, "visible") == 0) {
+                smdhFlags |= VISIBLE;
+            } else if(strcmp(flag, "autoboot") == 0) {
+                smdhFlags |= AUTO_BOOT;
+            } else if(strcmp(flag, "allow3d") == 0) {
+                smdhFlags |= ALLOW_3D;
+            } else if(strcmp(flag, "requireeula") == 0) {
+                smdhFlags |= REQUIRE_EULA;
+            } else if(strcmp(flag, "autosave") == 0) {
+                smdhFlags |= AUTO_SAVE_ON_EXIT;
+            } else if(strcmp(flag, "extendedbanner") == 0) {
+                smdhFlags |= USE_EXTENDED_BANNER;
+            } else if(strcmp(flag, "ratingrequired") == 0) {
+                smdhFlags |= RATING_REQUIED;
+            } else if(strcmp(flag, "savedata") == 0) {
+                smdhFlags |= USE_SAVE_DATA;
+            } else if(strcmp(flag, "recordusage") == 0) {
+                smdhFlags |= RECORD_USAGE;
+            } else if(strcmp(flag, "nosavebackups") == 0) {
+                smdhFlags |= DISABLE_SAVE_BACKUPS;
+            } else {
+                cmd_invalid_arg("flags", command);
+            }
+        }
+
+        cmd_free_list(regions);
+        cmd_free_list(flags);
+
+        return cmd_make_smdh(shortTitle, longTitle, publisher, icon, (SMDHRegionFlag) regionFlags, matchMakerId, smdhFlags, eulaVersion, optimalBannerFrame, streetpassId, output);
     } else if(strcmp(command, "makecwav") == 0) {
-        char* input = cmd_find_arg(args, "i", "input");
-        char* output = cmd_find_arg(args, "o", "output");
+        const char* input = cmd_find_arg(args, "i", "input", NULL);
+        const char* output = cmd_find_arg(args, "o", "output", NULL);
         if(!input || !output) {
             cmd_missing_args(command);
             return -1;
@@ -365,8 +484,8 @@ int cmd_process_command(int argc, char* argv[]) {
 
         return cmd_make_cwav(input, output);
     } else if(strcmp(command, "lz11") == 0) {
-        char* input = cmd_find_arg(args, "i", "input");
-        char* output = cmd_find_arg(args, "o", "output");
+        const char* input = cmd_find_arg(args, "i", "input", NULL);
+        const char* output = cmd_find_arg(args, "o", "output", NULL);
         if(!input || !output) {
             cmd_missing_args(command);
             return -1;
