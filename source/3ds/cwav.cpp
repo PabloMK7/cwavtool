@@ -27,7 +27,7 @@ typedef struct {
 
 typedef struct {
     char magic[4] = {'I', 'N', 'F', 'O'};
-    u32 length = 0xC0;
+    u32 length;
     u32 type;
     u32 sampleRate;
     u32 unknown1 = 0;
@@ -59,10 +59,8 @@ u8* cwav_build(CWAV cwav, u32* size) {
     u32 offset = sizeof(CWAVHeader);
 
     header.infoChunkOffset = offset;
-    header.infoChunkLength = sizeof(CWAVInfoHeader);
+    header.infoChunkLength = (u32) sizeof(CWAVInfoHeader) + (u32) ((sizeof(CWAVChannelDataPointer) + sizeof(CWAVChannelData)) * cwav.channels);
     offset += header.infoChunkLength;
-
-    offset += (sizeof(CWAVChannelDataPointer) + sizeof(CWAVChannelData)) * cwav.channels;
 
     header.dataChunkOffset = offset;
     header.dataChunkLength = (u32) sizeof(CWAVDataHeader) + cwav.dataSize;
@@ -79,6 +77,7 @@ u8* cwav_build(CWAV cwav, u32* size) {
     u32 bytesPerSample = (u32) cwav.bitsPerSample / 8;
 
     CWAVInfoHeader infoHeader;
+    infoHeader.length = header.infoChunkLength;
     infoHeader.type = cwav.bitsPerSample == 16 ? PCM16 : PCM8;
     infoHeader.sampleRate = cwav.sampleRate;
     infoHeader.totalSamples = cwav.dataSize / bytesPerSample / cwav.channels;
@@ -102,7 +101,7 @@ u8* cwav_build(CWAV cwav, u32* size) {
     }
 
     CWAVDataHeader dataHeader;
-    dataHeader.length = (u32) sizeof(CWAVDataHeader) + cwav.dataSize;
+    dataHeader.length = header.dataChunkLength;
     memcpy(output + pos, &dataHeader, sizeof(CWAVDataHeader));
     pos += sizeof(CWAVDataHeader);
 
