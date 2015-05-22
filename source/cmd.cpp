@@ -331,15 +331,15 @@ void cmd_print_info(const char* command) {
         printf("  -l/--longtitle: Long title of the application.\n");
         printf("  -p/--publisher: Publisher of the application.\n");
         printf("  -i/--icon: PNG file to use as an icon.\n");
+        printf("  -o/--output: File to output the created SMDH/ICN to.\n");
         printf("  -r/--regions: Optional. Comma separated list of regions to lock the SMDH to.\n");
         printf("     Valid regions: regionfree, japan, northamerica, europe, australia, china, korea, taiwan.\n");
-        printf("  -mmid/--matchmakerid: Optional. Match maker ID of the SMDH.\n");
         printf("  -f/--flags: Optional. Flags to apply to the SMDH file.\n");
         printf("     Valid flags: visible, autoboot, allow3d, requireeula, autosave, extendedbanner, ratingrequired, savedata, recordusage, nosavebackups.\n");
+        printf("  -mmid/--matchmakerid: Optional. Match maker ID of the SMDH.\n");
         printf("  -ev/--eulaversion: Optional. Version of the EULA required to be accepted before launching.\n");
         printf("  -obf/--optimalbannerframe: Optional. Optimal frame of the accompanying banner.\n");
         printf("  -spid/--streetpassid: Optional. Streetpass ID of the SMDH.\n");
-        printf("  -o/--output: File to output the created SMDH/ICN to.\n");
     } else if(strcmp(command, "makecwav") == 0) {
         printf("makecwav - Creates a CWAV file from a WAV.\n");
         printf("  -i/--input: WAV file to convert.\n");
@@ -411,8 +411,8 @@ int cmd_process_command(int argc, char* argv[]) {
         }
 
         std::vector<const char*> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
-        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0"));
         std::vector<const char*> flags = cmd_parse_list(cmd_find_arg(args, "f", "flags", "visible,allow3d,recordusage"));
+        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0"));
         u16 eulaVersion = (u16) atoi(cmd_find_arg(args, "ev", "eulaversion", "0"));
         u32 optimalBannerFrame = (u32) atoll(cmd_find_arg(args, "obf", "optimalbannerframe", "0"));
         u32 streetpassId = (u32) atoll(cmd_find_arg(args, "spid", "streetpassid", "0"));
