@@ -299,7 +299,7 @@ std::vector<std::string> cmd_parse_list(const std::string list) {
     std::vector<std::string> ret;
     std::string::size_type lastPos = 0;
     std::string::size_type pos = 0;
-    while((pos = list.find(',')) != std::string::npos) {
+    while((pos = list.find(',', lastPos)) != std::string::npos) {
         ret.push_back(list.substr(lastPos, pos - lastPos));
         lastPos = pos + 1;
     }
