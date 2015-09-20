@@ -2,8 +2,8 @@
 
 #include "lz11.h"
 
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 
 typedef struct {
     char magic[4] = {'C', 'B', 'M', 'D'};

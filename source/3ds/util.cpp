@@ -33,6 +33,8 @@ u16 pack_color(u8 r, u8 g, u8 b, u8 a, PixelFormat format) {
         a >>= 4;
         return r << 12 | g << 8 | b << 4 | a;
     }
+
+	return 0;
 }
 
 u8* load_image(const char* image, u32 width, u32 height) {

@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <map>
+#include <string>
 #include <vector>
 
 u8* convert_to_cgfx(const std::string image, u32 width, u32 height, u32* size) {
