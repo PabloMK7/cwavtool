@@ -2,6 +2,8 @@
 
 #include "../pc/lodepng.h"
 
+#include <stdlib.h>
+
 u8 TILE_ORDER[64] = { 0,  1,  8,  9,  2,  3,  10, 11, 16, 17, 24, 25, 18, 19, 26, 27,
         4,  5,  12, 13, 6,  7,  14, 15, 20, 21, 28, 29, 22, 23, 30, 31,
         32, 33, 40, 41, 34, 35, 42, 43, 48, 49, 56, 57, 50, 51, 58, 59,
@@ -81,5 +83,9 @@ u16* image_data_to_tiles(u8* img, u32 width, u32 height, PixelFormat format, u32
 
 u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format, u32* size) {
 	u8* img = load_image(image, width, height);
+	if(img == NULL) {
+		return NULL;
+	}
+
 	return image_data_to_tiles(img, width, height, format, size);
 }
