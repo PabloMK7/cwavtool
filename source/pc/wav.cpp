@@ -1,6 +1,5 @@
 #include "wav.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -18,8 +17,7 @@ bool wav_find_chunk(FILE* fd, const char* magic) {
     return true;
 }
 
-WAV* wav_read(const char* file) {
-    FILE* fd = fopen(file, "r");
+WAV* wav_read(FILE* fd) {
     if(!fd) {
         printf("ERROR: Could not open WAV file: %s\n", strerror(errno));
         return NULL;
@@ -51,8 +49,6 @@ WAV* wav_read(const char* file) {
     fread(&(data.chunkSize), sizeof(data.chunkSize), 1, fd);
     data.data = (u8*) malloc(data.chunkSize);
     fread(data.data, 1, data.chunkSize, fd);
-
-    fclose(fd);
 
     WAV* wav = (WAV*) malloc(sizeof(WAV));
     wav->riff = riff;
