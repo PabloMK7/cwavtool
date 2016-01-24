@@ -2,6 +2,7 @@
 
 #include "3ds/3ds.h"
 #include "pc/wav.h"
+#include "pc/stb_vorbis.h"
 #include "types.h"
 
 #include <errno.h>
@@ -24,26 +25,59 @@ u8* convert_to_cgfx(const std::string image, u32 width, u32 height, u32* size) {
     memcpy(ret + BANNER_CGFX_HEADER_LENGTH, converted, convertedSize);
 
     *size = BANNER_CGFX_HEADER_LENGTH + convertedSize;
+    free(converted);
     return ret;
 }
 
 u8* convert_to_cwav(const std::string file, u32* size) {
-    WAV* wav = wav_read(file.c_str());
-    if(wav == NULL) {
-        return NULL;
+    u8* ret = NULL;
+    // Determine what file type we have
+    FILE* fd = fopen(file.c_str(), "rb");
+    char magic[4];
+    fread(magic, sizeof(magic), 1, fd);
+    rewind(fd); // equivalent to SEEK_SET to pos 0
+
+    if (magic[0] == 'R' && magic[1] == 'I' && magic[2] == 'F' && magic[3] == 'F') {
+      WAV* wav = wav_read(fd);
+      if(wav != NULL) {
+        CWAV cwav;
+        cwav.channels = wav->format.numChannels;
+        cwav.sampleRate = wav->format.sampleRate;
+        cwav.bitsPerSample = wav->format.bitsPerSample;
+        cwav.dataSize = wav->data.chunkSize;
+        cwav.data = wav->data.data;
+
+        ret = cwav_build(cwav, size);
+
+        wav_free(wav);
+      }
+    } else if (magic[0] == 'O' && magic[1] == 'g' && magic[2] == 'g' && magic[3] == 'S') {
+      int error;
+      stb_vorbis* vorb = stb_vorbis_open_file(fd, false, &error, NULL);
+      if(vorb != NULL) {
+        stb_vorbis_info info = stb_vorbis_get_info(vorb);
+
+        CWAV cwav;
+        cwav.channels = info.channels;
+        cwav.sampleRate = info.sample_rate;
+        cwav.bitsPerSample = 16; // stb_vorbis always outputs 16 bit samples
+        int sampleCount = stb_vorbis_stream_length_in_samples(vorb) * info.channels;
+        cwav.dataSize = sampleCount * 2;
+        cwav.data = (u8*) calloc(sampleCount, 2);
+        stb_vorbis_get_samples_short_interleaved(vorb, info.channels, (short*) cwav.data, sampleCount);
+
+        ret = cwav_build(cwav, size);
+
+        free(cwav.data);
+        stb_vorbis_close(vorb);
+      } else {
+        printf("ERROR: Vorbis open failed, error %d.\n", error);
+      }
+    } else {
+      printf("ERROR: Audio file header '%c%c%c%c' unrecognized.\n", magic[0], magic[1], magic[2], magic[3]);
     }
 
-    CWAV cwav;
-    cwav.channels = wav->format.numChannels;
-    cwav.sampleRate = wav->format.sampleRate;
-    cwav.bitsPerSample = wav->format.bitsPerSample;
-    cwav.dataSize = wav->data.chunkSize;
-    cwav.data = wav->data.data;
-
-    u8* ret = cwav_build(cwav, size);
-
-    wav_free(wav);
-
+    fclose(fd);
     return ret;
 }
 
