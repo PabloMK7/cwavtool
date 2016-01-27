@@ -38,43 +38,43 @@ u8* convert_to_cwav(const std::string file, u32* size) {
     rewind(fd); // equivalent to SEEK_SET to pos 0
 
     if (magic[0] == 'R' && magic[1] == 'I' && magic[2] == 'F' && magic[3] == 'F') {
-      WAV* wav = wav_read(fd);
-      if(wav != NULL) {
-        CWAV cwav;
-        cwav.channels = wav->format.numChannels;
-        cwav.sampleRate = wav->format.sampleRate;
-        cwav.bitsPerSample = wav->format.bitsPerSample;
-        cwav.dataSize = wav->data.chunkSize;
-        cwav.data = wav->data.data;
+        WAV* wav = wav_read(fd);
+        if(wav != NULL) {
+            CWAV cwav;
+            cwav.channels = wav->format.numChannels;
+            cwav.sampleRate = wav->format.sampleRate;
+            cwav.bitsPerSample = wav->format.bitsPerSample;
+            cwav.dataSize = wav->data.chunkSize;
+            cwav.data = wav->data.data;
 
-        ret = cwav_build(cwav, size);
+            ret = cwav_build(cwav, size);
 
-        wav_free(wav);
-      }
+            wav_free(wav);
+        }
     } else if (magic[0] == 'O' && magic[1] == 'g' && magic[2] == 'g' && magic[3] == 'S') {
-      int error;
-      stb_vorbis* vorb = stb_vorbis_open_file(fd, false, &error, NULL);
-      if(vorb != NULL) {
-        stb_vorbis_info info = stb_vorbis_get_info(vorb);
+        int error;
+        stb_vorbis* vorb = stb_vorbis_open_file(fd, false, &error, NULL);
+        if(vorb != NULL) {
+            stb_vorbis_info info = stb_vorbis_get_info(vorb);
 
-        CWAV cwav;
-        cwav.channels = info.channels;
-        cwav.sampleRate = info.sample_rate;
-        cwav.bitsPerSample = 16; // stb_vorbis always outputs 16 bit samples
-        int sampleCount = stb_vorbis_stream_length_in_samples(vorb) * info.channels;
-        cwav.dataSize = sampleCount * 2;
-        cwav.data = (u8*) calloc(sampleCount, 2);
-        stb_vorbis_get_samples_short_interleaved(vorb, info.channels, (short*) cwav.data, sampleCount);
+            CWAV cwav;
+            cwav.channels = info.channels;
+            cwav.sampleRate = info.sample_rate;
+            cwav.bitsPerSample = 16; // stb_vorbis always outputs 16 bit samples
+            int sampleCount = stb_vorbis_stream_length_in_samples(vorb) * info.channels;
+            cwav.dataSize = sampleCount * 2;
+            cwav.data = (u8*) calloc(sampleCount, 2);
+            stb_vorbis_get_samples_short_interleaved(vorb, info.channels, (short*) cwav.data, sampleCount);
 
-        ret = cwav_build(cwav, size);
+            ret = cwav_build(cwav, size);
 
-        free(cwav.data);
-        stb_vorbis_close(vorb);
-      } else {
-        printf("ERROR: Vorbis open failed, error %d.\n", error);
-      }
+            free(cwav.data);
+            stb_vorbis_close(vorb);
+        } else {
+            printf("ERROR: Vorbis open failed, error %d.\n", error);
+        }
     } else {
-      printf("ERROR: Audio file header '%c%c%c%c' unrecognized.\n", magic[0], magic[1], magic[2], magic[3]);
+        printf("ERROR: Audio file header '%c%c%c%c' unrecognized.\n", magic[0], magic[1], magic[2], magic[3]);
     }
 
     fclose(fd);
@@ -155,10 +155,10 @@ int cmd_make_banner(const std::string image, const std::string audio, const std:
 }
 
 int cmd_make_smdh(const std::string shortTitle, const std::string longTitle, const std::string publisher, const std::string icon, SMDHRegionFlag regionFlags, u64 matchMakerId, u32 smdhFlags, u16 eulaVersion, u32 optimalBannerFrame, u32 streetpassId, const std::string output) {
-	u8* icon48Data = load_image(icon.c_str(), 48, 48);
-	if(icon48Data == NULL) {
-		return 1;
-	}
+    u8* icon48Data = load_image(icon.c_str(), 48, 48);
+    if(icon48Data == NULL) {
+        return 1;
+    }
 
     u16* icon48 = image_data_to_tiles(icon48Data, 48, 48, RGB565, NULL);
     if(icon48 == NULL) {
@@ -168,42 +168,42 @@ int cmd_make_smdh(const std::string shortTitle, const std::string longTitle, con
     u8 icon24Data[24 * 24 * 4];
     for(int y = 0; y < 48; y += 2) {
         for(int x = 0; x < 48; x += 2) {
-			int i1 = (y * 48 + x) * 4;
-			u8 r1 = icon48Data[i1 + 0];
-			u8 g1 = icon48Data[i1 + 1];
-			u8 b1 = icon48Data[i1 + 2];
-			u8 a1 = icon48Data[i1 + 3];
+            int i1 = (y * 48 + x) * 4;
+            u8 r1 = icon48Data[i1 + 0];
+            u8 g1 = icon48Data[i1 + 1];
+            u8 b1 = icon48Data[i1 + 2];
+            u8 a1 = icon48Data[i1 + 3];
 
-			int i2 = (y * 48 + (x + 1)) * 4;
-			u8 r2 = icon48Data[i2 + 0];
-			u8 g2 = icon48Data[i2 + 1];
-			u8 b2 = icon48Data[i2 + 2];
-			u8 a2 = icon48Data[i2 + 3];
+            int i2 = (y * 48 + (x + 1)) * 4;
+            u8 r2 = icon48Data[i2 + 0];
+            u8 g2 = icon48Data[i2 + 1];
+            u8 b2 = icon48Data[i2 + 2];
+            u8 a2 = icon48Data[i2 + 3];
 
-			int i3 = ((y + 1) * 48 + x) * 4;
-			u8 r3 = icon48Data[i3 + 0];
-			u8 g3 = icon48Data[i3 + 1];
-			u8 b3 = icon48Data[i3 + 2];
-			u8 a3 = icon48Data[i3 + 3];
+            int i3 = ((y + 1) * 48 + x) * 4;
+            u8 r3 = icon48Data[i3 + 0];
+            u8 g3 = icon48Data[i3 + 1];
+            u8 b3 = icon48Data[i3 + 2];
+            u8 a3 = icon48Data[i3 + 3];
 
-			int i4 = ((y + 1) * 48 + (x + 1)) * 4;
-			u8 r4 = icon48Data[i4 + 0];
-			u8 g4 = icon48Data[i4 + 1];
-			u8 b4 = icon48Data[i4 + 2];
-			u8 a4 = icon48Data[i4 + 3];
+            int i4 = ((y + 1) * 48 + (x + 1)) * 4;
+            u8 r4 = icon48Data[i4 + 0];
+            u8 g4 = icon48Data[i4 + 1];
+            u8 b4 = icon48Data[i4 + 2];
+            u8 a4 = icon48Data[i4 + 3];
 
-			int id = ((y / 2) * 24 + (x / 2)) * 4;
-			icon24Data[id + 0] = (u8) ((r1 + r2 + r3 + r4) / 4);
-			icon24Data[id + 1] = (u8) ((g1 + g2 + g3 + g4) / 4);
-			icon24Data[id + 2] = (u8) ((b1 + b2 + b3 + b4) / 4);
-			icon24Data[id + 3] = (u8) ((a1 + a2 + a3 + a4) / 4);
+            int id = ((y / 2) * 24 + (x / 2)) * 4;
+            icon24Data[id + 0] = (u8) ((r1 + r2 + r3 + r4) / 4);
+            icon24Data[id + 1] = (u8) ((g1 + g2 + g3 + g4) / 4);
+            icon24Data[id + 2] = (u8) ((b1 + b2 + b3 + b4) / 4);
+            icon24Data[id + 3] = (u8) ((a1 + a2 + a3 + a4) / 4);
         }
     }
 
-	u16* icon24 = image_data_to_tiles(icon24Data, 24, 24, RGB565, NULL);
-	if(icon24 == NULL) {
-		return 1;
-	}
+    u16* icon24 = image_data_to_tiles(icon24Data, 24, 24, RGB565, NULL);
+    if(icon24 == NULL) {
+        return 1;
+    }
 
     SMDH smdh;
     for(int i = 0; i < 0x10; i++) {

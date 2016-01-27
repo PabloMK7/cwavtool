@@ -34,75 +34,75 @@ u16 pack_color(u8 r, u8 g, u8 b, u8 a, PixelFormat format) {
         return r << 12 | g << 8 | b << 4 | a;
     }
 
-	return 0;
+    return 0;
 }
 
 u8* load_image(const char* image, u32 width, u32 height) {
-	unsigned char *img;
-	int imgWidth, imgHeight, imgDepth;
+    unsigned char *img;
+    int imgWidth, imgHeight, imgDepth;
 
-	img = stbi_load(image, &imgWidth, &imgHeight, &imgDepth, STBI_rgb_alpha);
+    img = stbi_load(image, &imgWidth, &imgHeight, &imgDepth, STBI_rgb_alpha);
 
-	if(img == NULL) {
-		printf("ERROR: Could not load image file: %s.\n", stbi_failure_reason());
-		return NULL;
-	}
+    if(img == NULL) {
+        printf("ERROR: Could not load image file: %s.\n", stbi_failure_reason());
+        return NULL;
+    }
 
-	if(width == 0) {
-		width = imgWidth;
-	}
+    if(width == 0) {
+        width = imgWidth;
+    }
 
-	if(height == 0) {
-		height = imgHeight;
-	}
+    if(height == 0) {
+        height = imgHeight;
+    }
 
-	if(imgWidth != width || imgHeight != height) {
-		printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
-		return NULL;
-	}
+    if(imgWidth != width || imgHeight != height) {
+        printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
+        return NULL;
+    }
 
-	if(imgDepth != STBI_rgb_alpha) {
-		printf("ERROR: Decoded image does't match expected format (%d, wanted %d).\n",
-			imgDepth, STBI_rgb_alpha);
-		return NULL;
-	}
+    if(imgDepth != STBI_rgb_alpha) {
+        printf("ERROR: Decoded image does't match expected format (%d, wanted %d).\n",
+            imgDepth, STBI_rgb_alpha);
+        return NULL;
+    }
 
-	return img;
+    return img;
 }
 
 void free_image(u8* img) {
-	stbi_image_free(img);
+    stbi_image_free(img);
 }
 
 u16* image_data_to_tiles(u8* img, u32 width, u32 height, PixelFormat format, u32* size) {
-	u16* converted = (u16*) malloc(width * height * sizeof(u16));
-	u32 n = 0;
-	for(int y = 0; y < height; y += 8) {
-		for(int x = 0; x < width; x += 8) {
-			for(int k = 0; k < 8 * 8; k++) {
-				u32 xx = (u32) (TILE_ORDER[k] & 0x7);
-				u32 yy = (u32) (TILE_ORDER[k] >> 3);
+    u16* converted = (u16*) malloc(width * height * sizeof(u16));
+    u32 n = 0;
+    for(int y = 0; y < height; y += 8) {
+        for(int x = 0; x < width; x += 8) {
+            for(int k = 0; k < 8 * 8; k++) {
+                u32 xx = (u32) (TILE_ORDER[k] & 0x7);
+                u32 yy = (u32) (TILE_ORDER[k] >> 3);
 
-				u8* pixel = img + (((y + yy) * width + (x + xx)) * 4);
-				converted[n++] = pack_color(pixel[0], pixel[1], pixel[2], pixel[3], format);
-			}
-		}
-	}
+                u8* pixel = img + (((y + yy) * width + (x + xx)) * 4);
+                converted[n++] = pack_color(pixel[0], pixel[1], pixel[2], pixel[3], format);
+            }
+        }
+    }
 
-	if(size != NULL) {
-		*size = width * height * (u32) sizeof(u16);
-	}
+    if(size != NULL) {
+        *size = width * height * (u32) sizeof(u16);
+    }
 
-	return converted;
+    return converted;
 }
 
 u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format, u32* size) {
-	u8* img = load_image(image, width, height);
-	if(img == NULL) {
-		return NULL;
-	}
+    u8* img = load_image(image, width, height);
+    if(img == NULL) {
+        return NULL;
+    }
 
-	u16* tiles = image_data_to_tiles(img, width, height, format, size);
-	free_image(img);
-	return tiles;
+    u16* tiles = image_data_to_tiles(img, width, height, format, size);
+    free_image(img);
+    return tiles;
 }
