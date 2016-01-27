@@ -1,5 +1,5 @@
-#ifndef __LZ11_H__
-#define __LZ11_H__
+#ifndef LZ11_H
+#define LZ11_H
 
 #include "../types.h"
 

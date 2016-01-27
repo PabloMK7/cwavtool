@@ -1,5 +1,5 @@
-#ifndef __CWAV_H__
-#define __CWAV_H__
+#ifndef CWAV_H
+#define CWAV_H
 
 #include "../types.h"
 

@@ -1,5 +1,5 @@
-#ifndef __SMDH_H__
-#define __SMDH_H__
+#ifndef SMDH_H
+#define SMDH_H
 
 #include "../types.h"
 

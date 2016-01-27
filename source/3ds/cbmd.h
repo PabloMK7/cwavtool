@@ -1,5 +1,5 @@
-#ifndef __CBMD_H__
-#define __CBMD_H__
+#ifndef CBMD_H
+#define CBMD_H
 
 #include "../types.h"
 
