@@ -58,12 +58,14 @@ u8* load_image(const char* image, u32 width, u32 height) {
 
     if(imgWidth != width || imgHeight != height) {
         printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
+        stbi_image_free(img);
         return NULL;
     }
 
     if(imgDepth != STBI_rgb_alpha) {
         printf("ERROR: Decoded image does't match expected format (%d, wanted %d).\n",
             imgDepth, STBI_rgb_alpha);
+        stbi_image_free(img);
         return NULL;
     }
 
