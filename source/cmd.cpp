@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-u8* convert_to_cgfx(const std::string image, u32 width, u32 height, u32* size) {
+u8* convert_to_cgfx(const std::string& image, u32 width, u32 height, u32* size) {
     u32 convertedSize = 0;
     u16* converted = image_to_tiles(image.c_str(), width, height, RGBA4444, &convertedSize);
     if(converted == NULL) {
@@ -29,7 +29,7 @@ u8* convert_to_cgfx(const std::string image, u32 width, u32 height, u32* size) {
     return ret;
 }
 
-u8* convert_to_cwav(const std::string file, u32* size) {
+u8* convert_to_cwav(const std::string& file, u32* size) {
     u8* ret = NULL;
     // Determine what file type we have
     FILE* fd = fopen(file.c_str(), "rb");
@@ -81,7 +81,7 @@ u8* convert_to_cwav(const std::string file, u32* size) {
     return ret;
 }
 
-int cmd_make_banner(const std::string image, const std::string audio, const std::string cgfxFile, const std::string cwavFile, const std::string output) {
+int cmd_make_banner(const std::string& image, const std::string& audio, const std::string& cgfxFile, const std::string& cwavFile, const std::string& output) {
     u32 cgfxSize = 0;
     u8* cgfx = NULL;
     if(!cgfxFile.empty()) {
@@ -154,7 +154,7 @@ int cmd_make_banner(const std::string image, const std::string audio, const std:
     return 0;
 }
 
-int cmd_make_smdh(const std::string shortTitle, const std::string longTitle, const std::string publisher, const std::string icon, SMDHRegionFlag regionFlags, u64 matchMakerId, u32 smdhFlags, u16 eulaVersion, u32 optimalBannerFrame, u32 streetpassId, const std::string output) {
+int cmd_make_smdh(const std::string& shortTitle, const std::string& longTitle, const std::string& publisher, const std::string& icon, SMDHRegionFlag regionFlags, u64 matchMakerId, u32 smdhFlags, u16 eulaVersion, u32 optimalBannerFrame, u32 streetpassId, const std::string& output) {
     u8* icon48Data = load_image(icon.c_str(), 48, 48);
     if(icon48Data == NULL) {
         return 1;
@@ -236,7 +236,7 @@ int cmd_make_smdh(const std::string shortTitle, const std::string longTitle, con
     return 0;
 }
 
-int cmd_make_cwav(const std::string input, const std::string output) {
+int cmd_make_cwav(const std::string& input, const std::string& output) {
     u32 cwavSize = 0;
     u8* cwav = convert_to_cwav(input, &cwavSize);
     if(cwav == NULL) {
@@ -258,7 +258,7 @@ int cmd_make_cwav(const std::string input, const std::string output) {
     return 0;
 }
 
-int cmd_lz11(const std::string input, const std::string output) {
+int cmd_lz11(const std::string& input, const std::string& output) {
     FILE* in = fopen(input.c_str(), "r");
     if(in == NULL) {
         printf("ERROR: Could not open input file: %s\n", strerror(errno));
@@ -312,11 +312,11 @@ std::map<std::string, std::string> cmd_get_args(int argc, char* argv[]) {
     return args;
 }
 
-std::string cmd_find_arg(std::map<std::string, std::string> args, const std::string shortOpt, const std::string longOpt, const std::string def) {
+std::string cmd_find_arg(const std::map<std::string, std::string>& args, const std::string& shortOpt, const std::string& longOpt, const std::string& def) {
     std::string sopt = "-" + shortOpt;
     std::string lopt = "--" + longOpt;
 
-    std::map<std::string, std::string>::iterator match = args.find(sopt);
+    std::map<std::string, std::string>::const_iterator match = args.find(sopt);
     if(match != args.end()) {
         return (*match).second;
     }
@@ -329,7 +329,7 @@ std::string cmd_find_arg(std::map<std::string, std::string> args, const std::str
     return def;
 }
 
-std::vector<std::string> cmd_parse_list(const std::string list) {
+std::vector<std::string> cmd_parse_list(const std::string& list) {
     std::vector<std::string> ret;
     std::string::size_type lastPos = 0;
     std::string::size_type pos = 0;
@@ -345,7 +345,7 @@ std::vector<std::string> cmd_parse_list(const std::string list) {
     return ret;
 }
 
-void cmd_print_info(const std::string command) {
+void cmd_print_info(const std::string& command) {
     if(command.compare("makebanner") == 0) {
         printf("makebanner - Creates a .bnr file.\n");
         printf("  -i/--image: PNG file to use as the banner's image. Interchangeable with -ci.\n");
@@ -387,22 +387,22 @@ void cmd_print_commands() {
     cmd_print_info("lz11");
 }
 
-void cmd_print_usage(const std::string executedFrom) {
+void cmd_print_usage(const std::string& executedFrom) {
     printf("Usage: %s <command> <args>\n", executedFrom.c_str());
     cmd_print_commands();
 }
 
-void cmd_missing_args(const std::string command) {
+void cmd_missing_args(const std::string& command) {
     printf("Missing arguments for command \"%s\".\n", command.c_str());
     cmd_print_info(command);
 }
 
-void cmd_invalid_arg(const std::string argument, const std::string command) {
+void cmd_invalid_arg(const std::string& argument, const std::string& command) {
     printf("Invalid value for argument \"%s\" in command \"%s\".\n", argument.c_str(), command.c_str());
     cmd_print_info(command);
 }
 
-void cmd_invalid_command(const std::string command) {
+void cmd_invalid_command(const std::string& command) {
     printf("Invalid command \"%s\".\n", command.c_str());
     cmd_print_commands();
 }
