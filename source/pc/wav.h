@@ -1,6 +1,8 @@
 #ifndef __WAV_H__
 #define __WAV_H__
 
+#include <stdio.h>
+
 #include "../types.h"
 
 typedef struct {
@@ -32,7 +34,7 @@ typedef struct {
     Data data;
 } WAV;
 
-WAV* wav_read(const char* file);
+WAV* wav_read(FILE* fd);
 void wav_free(WAV* wav);
 
 #endif

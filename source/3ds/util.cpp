@@ -1,6 +1,6 @@
 #include "util.h"
 
-#include "../pc/lodepng.h"
+#include "../pc/stb_image.h"
 
 #include <stdlib.h>
 
@@ -39,9 +39,12 @@ u16 pack_color(u8 r, u8 g, u8 b, u8 a, PixelFormat format) {
 
 u8* load_image(const char* image, u32 width, u32 height) {
 	unsigned char *img;
-	unsigned int imgWidth, imgHeight;
-	if(lodepng_decode32_file(&img, &imgWidth, &imgHeight, image)) {
-		printf("ERROR: Could not load png file.\n");
+	int imgWidth, imgHeight, imgDepth;
+
+	img = stbi_load(image, &imgWidth, &imgHeight, &imgDepth, STBI_rgb_alpha);
+
+	if(img == NULL) {
+		printf("ERROR: Could not load image file: %s.\n", stbi_failure_reason());
 		return NULL;
 	}
 
@@ -58,7 +61,17 @@ u8* load_image(const char* image, u32 width, u32 height) {
 		return NULL;
 	}
 
+	if(imgDepth != STBI_rgb_alpha) {
+		printf("ERROR: Decoded image does't match expected format (%d, wanted %d).\n",
+			imgDepth, STBI_rgb_alpha);
+		return NULL;
+	}
+
 	return img;
+}
+
+void free_image(u8* img) {
+	stbi_image_free(img);
 }
 
 u16* image_data_to_tiles(u8* img, u32 width, u32 height, PixelFormat format, u32* size) {
@@ -89,5 +102,7 @@ u16* image_to_tiles(const char* image, u32 width, u32 height, PixelFormat format
 		return NULL;
 	}
 
-	return image_data_to_tiles(img, width, height, format, size);
+	u16* tiles = image_data_to_tiles(img, width, height, format, size);
+	free_image(img);
+	return tiles;
 }
