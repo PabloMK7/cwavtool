@@ -1,4 +1,3 @@
-<b><center>bannertool</center></b>
-==========
+# bannertool
 
 A tool for creating 3DS banners.
