@@ -1,5 +1,5 @@
-#ifndef __3DS_H__
-#define __3DS_H__
+#ifndef I_3DS_H
+#define I_3DS_H
 
 #include "cbmd.h"
 #include "cwav.h"
