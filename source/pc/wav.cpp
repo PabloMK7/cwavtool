@@ -6,9 +6,10 @@
 
 bool wav_find_chunk(FILE* fd, const char* magic) {
     char curr[5] = {0};
-    while(strcmp(curr, magic) != 0) {
-        u32 read = (u32) fread(curr, 1, 4, fd);
-        if(read == 0) {
+    for(long pos = ftell(fd); strcmp(curr, magic) != 0; pos++) {
+        fseek(fd, pos, SEEK_SET);
+        size_t read = fread(curr, 1, 4, fd);
+        if(read <= 0) {
             return false;
         }
     }
