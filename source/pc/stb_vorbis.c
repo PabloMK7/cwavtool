@@ -1868,85 +1868,6 @@ static int codebook_decode_deinterleave_repeat(vorb *f, Codebook *c, float **out
    return TRUE;
 }
 
-#ifndef STB_VORBIS_DIVIDES_IN_CODEBOOK
-static int codebook_decode_deinterleave_repeat_2(vorb *f, Codebook *c, float **outputs, int *c_inter_p, int *p_inter_p, int len, int total_decode)
-{
-   int c_inter = *c_inter_p;
-   int p_inter = *p_inter_p;
-   int i,z, effective = c->dimensions;
-
-   // type 0 is only legal in a scalar context
-   if (c->lookup_type == 0)   return error(f, VORBIS_invalid_stream);
-
-   while (total_decode > 0) {
-      float last = CODEBOOK_ELEMENT_BASE(c);
-      DECODE_VQ(z,f,c);
-
-      if (z < 0) {
-         if (!f->bytes_in_seg)
-            if (f->last_seg) return FALSE;
-         return error(f, VORBIS_invalid_stream);
-      }
-
-      // if this will take us off the end of the buffers, stop short!
-      // we check by computing the length of the virtual interleaved
-      // buffer (len*ch), our current offset within it (p_inter*ch)+(c_inter),
-      // and the length we'll be using (effective)
-      if (c_inter + p_inter*2 + effective > len * 2) {
-         effective = len*2 - (p_inter*2 - c_inter);
-      }
-
-      {
-         z *= c->dimensions;
-         if (c->sequence_p) {
-            // haven't optimized this case because I don't have any examples
-            for (i=0; i < effective; ++i) {
-               float val = CODEBOOK_ELEMENT_FAST(c,z+i) + last;
-               if (outputs[c_inter])
-                  outputs[c_inter][p_inter] += val;
-               if (++c_inter == 2) { c_inter = 0; ++p_inter; }
-               last = val;
-            }
-         } else {
-            i=0;
-            if (c_inter == 1 && i < effective) {
-               float val = CODEBOOK_ELEMENT_FAST(c,z+i) + last;
-               if (outputs[c_inter])
-                  outputs[c_inter][p_inter] += val;
-               c_inter = 0; ++p_inter;
-               ++i;
-            }
-            {
-               float *z0 = outputs[0];
-               float *z1 = outputs[1];
-               for (; i+1 < effective;) {
-                  float v0 = CODEBOOK_ELEMENT_FAST(c,z+i) + last;
-                  float v1 = CODEBOOK_ELEMENT_FAST(c,z+i+1) + last;
-                  if (z0)
-                     z0[p_inter] += v0;
-                  if (z1)
-                     z1[p_inter] += v1;
-                  ++p_inter;
-                  i += 2;
-               }
-            }
-            if (i < effective) {
-               float val = CODEBOOK_ELEMENT_FAST(c,z+i) + last;
-               if (outputs[c_inter])
-                  outputs[c_inter][p_inter] += val;
-               if (++c_inter == 2) { c_inter = 0; ++p_inter; }
-            }
-         }
-      }
-
-      total_decode -= effective;
-   }
-   *c_inter_p = c_inter;
-   *p_inter_p = p_inter;
-   return TRUE;
-}
-#endif
-
 static int predict_point(int x, int x0, int x1, int y0, int y1)
 {
    int dy = y1 - y0;
@@ -3980,7 +3901,7 @@ static int start_decoder(vorb *f)
             g->sorted_order[j] = (uint8) p[j].y;
          // precompute the neighbors
          for (j=2; j < g->values; ++j) {
-            int low,hi;
+            int low = 0, hi = 0;
             neighbors(g->Xlist, j, &low,&hi);
             g->neighbors[j][0] = low;
             g->neighbors[j][1] = hi;
@@ -4652,7 +4573,7 @@ static int seek_to_sample_coarse(stb_vorbis *f, uint32 sample_number)
    ProbedPage left, right, mid;
    int i, start_seg_with_known_loc, end_pos, page_start;
    uint32 delta, stream_length, padding;
-   double offset, bytes_per_sample;
+   double offset = 0, bytes_per_sample = 0;
    int probe = 0;
 
    // find the last page and validate the target sample

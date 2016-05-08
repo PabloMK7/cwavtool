@@ -4,6 +4,7 @@
 #include "pc/wav.h"
 #include "pc/stb_vorbis.h"
 #include "types.h"
+#include "3ds/smdh.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -154,7 +155,7 @@ int cmd_make_banner(const std::string& image, const std::string& audio, const st
     return 0;
 }
 
-int cmd_make_smdh(const std::string& shortTitle, const std::string& longTitle, const std::string& publisher, const std::string& icon, SMDHRegionFlag regionFlags, u64 matchMakerId, u32 smdhFlags, u16 eulaVersion, u32 optimalBannerFrame, u32 streetpassId, const std::string& output) {
+int cmd_make_smdh(const std::string& shortTitle, const std::string& longTitle, const std::string& publisher, const std::string& icon, SMDH base, const std::string& output) {
     u8* icon48Data = load_image(icon.c_str(), 48, 48);
     if(icon48Data == NULL) {
         return 1;
@@ -205,22 +206,14 @@ int cmd_make_smdh(const std::string& shortTitle, const std::string& longTitle, c
         return 1;
     }
 
-    SMDH smdh;
     for(int i = 0; i < 0x10; i++) {
-        utf8_to_utf16(smdh.titles[i].shortTitle, shortTitle.c_str(), 0x40);
-        utf8_to_utf16(smdh.titles[i].longTitle, longTitle.c_str(), 0x80);
-        utf8_to_utf16(smdh.titles[i].publisher, publisher.c_str(), 0x40);
+        utf8_to_utf16(base.titles[i].shortTitle, shortTitle.c_str(), 0x40);
+        utf8_to_utf16(base.titles[i].longTitle, longTitle.c_str(), 0x80);
+        utf8_to_utf16(base.titles[i].publisher, publisher.c_str(), 0x40);
     }
 
-    smdh.settings.regionLock = regionFlags;
-    memcpy(smdh.settings.matchMakerId, &matchMakerId, 0xC);
-    smdh.settings.flags = smdhFlags;
-    smdh.settings.eulaVersion = eulaVersion;
-    smdh.settings.optimalBannerFrame = optimalBannerFrame;
-    smdh.settings.streetpassId = streetpassId;
-
-    memcpy(smdh.largeIcon, icon48, 0x1200);
-    memcpy(smdh.smallIcon, icon24, 0x480);
+    memcpy(base.largeIcon, icon48, 0x1200);
+    memcpy(base.smallIcon, icon24, 0x480);
     free(icon48);
 
     FILE* fd = fopen(output.c_str(), "wb");
@@ -229,7 +222,7 @@ int cmd_make_smdh(const std::string& shortTitle, const std::string& longTitle, c
         return 2;
     }
 
-    fwrite(&smdh, 1, sizeof(SMDH), fd);
+    fwrite(&base, 1, sizeof(SMDH), fd);
     fclose(fd);
 
     printf("Created SMDH \"%s\".\n", output.c_str());
@@ -368,6 +361,15 @@ void cmd_print_info(const std::string& command) {
         printf("  -ev/--eulaversion: Optional. Version of the EULA required to be accepted before launching.\n");
         printf("  -obf/--optimalbannerframe: Optional. Optimal frame of the accompanying banner.\n");
         printf("  -spid/--streetpassid: Optional. Streetpass ID of the SMDH.\n");
+        printf("  -cer/--cero: Optional. CERO rating number (0-255).\n");
+        printf("  -er/--esrb: Optional. ESRB rating number (0-255).\n");
+        printf("  -ur/--usk: Optional. USK rating number (0-255).\n");
+        printf("  -pgr/--pegigen: Optional. PEGI GEN rating number (0-255).\n");
+        printf("  -ppr/--pegiptr: Optional. PEGI PTR rating number (0-255).\n");
+        printf("  -pbr/--pegibbfc: Optional. PEGI BBFC rating number (0-255).\n");
+        printf("  -cr/--cob: Optional. COB rating number (0-255).\n");
+        printf("  -gr/--grb: Optional. GR rating number (0-255).\n");
+        printf("  -cgr/--cgsrr: Optional. CGSRR rating number (0-255).\n");
     } else if(command.compare("makecwav") == 0) {
         printf("makecwav - Creates a CWAV file from a WAV.\n");
         printf("  -i/--input: WAV file to convert.\n");
@@ -438,67 +440,80 @@ int cmd_process_command(int argc, char* argv[]) {
             return -1;
         }
 
-        std::vector<std::string> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
-        std::vector<std::string> flags = cmd_parse_list(cmd_find_arg(args, "f", "flags", "visible,allow3d,recordusage"));
-        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0").c_str());
-        u16 eulaVersion = (u16) atoi(cmd_find_arg(args, "ev", "eulaversion", "0").c_str());
-        u32 optimalBannerFrame = (u32) atoll(cmd_find_arg(args, "obf", "optimalbannerframe", "0").c_str());
-        u32 streetpassId = (u32) atoll(cmd_find_arg(args, "spid", "streetpassid", "0").c_str());
+        SMDH smdh;
+        memset(&smdh, 0, sizeof(SMDH));
 
-        u32 regionFlags = 0;
+        std::vector<std::string> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
         for(std::vector<std::string>::iterator it = regions.begin(); it != regions.end(); it++) {
             const std::string region = *it;
             if(region.compare("regionfree") == 0) {
-                regionFlags = REGION_FREE;
+                smdh.settings.regionLock = REGION_FREE;
                 break;
             } else if(region.compare("japan") == 0) {
-                regionFlags |= JAPAN;
+                smdh.settings.regionLock |= JAPAN;
             } else if(region.compare("northamerica") == 0) {
-                regionFlags |= NORTH_AMERICA;
+                smdh.settings.regionLock |= NORTH_AMERICA;
             } else if(region.compare("europe") == 0) {
-                regionFlags |= EUROPE;
+                smdh.settings.regionLock |= EUROPE;
             } else if(region.compare("australia") == 0) {
-                regionFlags |= AUSTRALIA;
+                smdh.settings.regionLock |= AUSTRALIA;
             } else if(region.compare("china") == 0) {
-                regionFlags |= CHINA;
+                smdh.settings.regionLock |= CHINA;
             } else if(region.compare("korea") == 0) {
-                regionFlags |= KOREA;
+                smdh.settings.regionLock |= KOREA;
             } else if(region.compare("taiwan") == 0) {
-                regionFlags |= TAIWAN;
+                smdh.settings.regionLock |= TAIWAN;
             } else {
                 cmd_invalid_arg("regions", command);
             }
         }
 
-        u32 smdhFlags = 0;
+        std::vector<std::string> flags = cmd_parse_list(cmd_find_arg(args, "f", "flags", "visible,allow3d,recordusage"));
         for(std::vector<std::string>::iterator it = flags.begin(); it != flags.end(); it++) {
             const std::string flag = *it;
             if(flag.compare("visible") == 0) {
-                smdhFlags |= VISIBLE;
+                smdh.settings.flags |= VISIBLE;
             } else if(flag.compare("autoboot") == 0) {
-                smdhFlags |= AUTO_BOOT;
+                smdh.settings.flags |= AUTO_BOOT;
             } else if(flag.compare("allow3d") == 0) {
-                smdhFlags |= ALLOW_3D;
+                smdh.settings.flags |= ALLOW_3D;
             } else if(flag.compare("requireeula") == 0) {
-                smdhFlags |= REQUIRE_EULA;
+                smdh.settings.flags |= REQUIRE_EULA;
             } else if(flag.compare("autosave") == 0) {
-                smdhFlags |= AUTO_SAVE_ON_EXIT;
+                smdh.settings.flags |= AUTO_SAVE_ON_EXIT;
             } else if(flag.compare("extendedbanner") == 0) {
-                smdhFlags |= USE_EXTENDED_BANNER;
+                smdh.settings.flags |= USE_EXTENDED_BANNER;
             } else if(flag.compare("ratingrequired") == 0) {
-                smdhFlags |= RATING_REQUIED;
+                smdh.settings.flags |= RATING_REQUIED;
             } else if(flag.compare("savedata") == 0) {
-                smdhFlags |= USE_SAVE_DATA;
+                smdh.settings.flags |= USE_SAVE_DATA;
             } else if(flag.compare("recordusage") == 0) {
-                smdhFlags |= RECORD_USAGE;
+                smdh.settings.flags |= RECORD_USAGE;
             } else if(flag.compare("nosavebackups") == 0) {
-                smdhFlags |= DISABLE_SAVE_BACKUPS;
+                smdh.settings.flags |= DISABLE_SAVE_BACKUPS;
             } else {
                 cmd_invalid_arg("flags", command);
             }
         }
 
-        return cmd_make_smdh(shortTitle, longTitle, publisher, icon, (SMDHRegionFlag) regionFlags, matchMakerId, smdhFlags, eulaVersion, optimalBannerFrame, streetpassId, output);
+        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0").c_str());
+        memcpy(smdh.settings.matchMakerId, &matchMakerId, 0xC);
+
+        smdh.settings.eulaVersion = (u16) atoi(cmd_find_arg(args, "ev", "eulaversion", "0").c_str());
+        smdh.settings.optimalBannerFrame = (u32) atoll(cmd_find_arg(args, "obf", "optimalbannerframe", "0").c_str());
+        smdh.settings.streetpassId = (u32) atoll(cmd_find_arg(args, "spid", "streetpassid", "0").c_str());
+
+        smdh.settings.gameRatings[CERO] = (u8) atoi(cmd_find_arg(args, "cer", "cero", "0").c_str());
+        smdh.settings.gameRatings[ESRB] = (u8) atoi(cmd_find_arg(args, "er", "esrb", "0").c_str());
+        smdh.settings.gameRatings[USK] = (u8) atoi(cmd_find_arg(args, "ur", "usk", "0").c_str());
+        smdh.settings.gameRatings[PEGI_GEN] = (u8) atoi(cmd_find_arg(args, "pgr", "pegigen", "0").c_str());
+        smdh.settings.gameRatings[PEGI_PTR] = (u8) atoi(cmd_find_arg(args, "ppr", "pegiptr", "0").c_str());
+        smdh.settings.gameRatings[PEGI_BBFC] = (u8) atoi(cmd_find_arg(args, "pbr", "pegibbfc", "0").c_str());
+        smdh.settings.gameRatings[COB] = (u8) atoi(cmd_find_arg(args, "cor", "cob", "0").c_str());
+        smdh.settings.gameRatings[GRB] = (u8) atoi(cmd_find_arg(args, "gr", "grb", "0").c_str());
+        smdh.settings.gameRatings[CGSRR] = (u8) atoi(cmd_find_arg(args, "cgr", "cgsrr", "0").c_str());
+
+        return cmd_make_smdh(shortTitle, longTitle, publisher, icon, smdh, output);
     } else if(strcmp(command, "makecwav") == 0) {
         const std::string input = cmd_find_arg(args, "i", "input", "");
         const std::string output = cmd_find_arg(args, "o", "output", "");
