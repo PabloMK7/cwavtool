@@ -1,6 +1,6 @@
 # TARGET #
 
-TARGET := PC
+TARGET := NATIVE
 LIBRARY := 0
 
 ifeq ($(TARGET),3DS)
