@@ -442,13 +442,6 @@ int cmd_process_command(int argc, char* argv[]) {
 
         SMDH smdh;
         
-        // Are These really needed? The values are coded in 3ds/smdh.h 
-        // So remove them if unnecessary
-        memset(&smdh.titles, 0, sizeof(SMDHTitle) * 0x10);
-        memset(&smdh.settings, 0, sizeof(SMDHSettings));
-        memset(&smdh.smallIcon, 0, 0x480);
-        memset(&smdh.largeIcon, 0, 0x1200);
-
         std::vector<std::string> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
         for(std::vector<std::string>::iterator it = regions.begin(); it != regions.end(); it++) {
             const std::string region = *it;
