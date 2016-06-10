@@ -441,8 +441,7 @@ int cmd_process_command(int argc, char* argv[]) {
         }
 
         SMDH smdh;
-        memset(&smdh, 0, sizeof(SMDH));
-
+        
         std::vector<std::string> regions = cmd_parse_list(cmd_find_arg(args, "r", "regions", "regionfree"));
         for(std::vector<std::string>::iterator it = regions.begin(); it != regions.end(); it++) {
             const std::string region = *it;
