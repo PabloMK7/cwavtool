@@ -54,7 +54,8 @@ typedef enum {
     RATING_REQUIED = 0x0040,
     USE_SAVE_DATA = 0x0080,
     RECORD_USAGE = 0x0100,
-    DISABLE_SAVE_BACKUPS = 0x0400
+    DISABLE_SAVE_BACKUPS = 0x0400,
+    NEW_3DS = 0x1000
 } SMDHFlag;
 
 typedef struct {
@@ -67,7 +68,7 @@ typedef struct {
     u8 gameRatings[0x10] = {0};
     u32 regionLock = REGION_FREE;
     u8 matchMakerId[0xC] = {0};
-    u32 flags = VISIBLE | ALLOW_3D | RECORD_USAGE;
+    u32 flags = 0;
     u16 eulaVersion = 0;
     u16 reserved1 = 0;
     u32 optimalBannerFrame = 0;
