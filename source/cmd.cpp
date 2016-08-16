@@ -356,7 +356,7 @@ void cmd_print_info(const std::string& command) {
         printf("  -r/--regions: Optional. Comma separated list of regions to lock the SMDH to.\n");
         printf("     Valid regions: regionfree, japan, northamerica, europe, australia, china, korea, taiwan.\n");
         printf("  -f/--flags: Optional. Flags to apply to the SMDH file.\n");
-        printf("     Valid flags: visible, autoboot, allow3d, requireeula, autosave, extendedbanner, ratingrequired, savedata, recordusage, nosavebackups.\n");
+        printf("     Valid flags: visible, autoboot, allow3d, requireeula, autosave, extendedbanner, ratingrequired, savedata, recordusage, nosavebackups, new3ds.\n");
         printf("  -mmid/--matchmakerid: Optional. Match maker ID of the SMDH.\n");
         printf("  -ev/--eulaversion: Optional. Version of the EULA required to be accepted before launching.\n");
         printf("  -obf/--optimalbannerframe: Optional. Optimal frame of the accompanying banner.\n");
@@ -490,6 +490,8 @@ int cmd_process_command(int argc, char* argv[]) {
                 smdh.settings.flags |= RECORD_USAGE;
             } else if(flag.compare("nosavebackups") == 0) {
                 smdh.settings.flags |= DISABLE_SAVE_BACKUPS;
+            } else if(flag.compare("new3ds") == 0) {
+                smdh.settings.flags |= NEW_3DS;
             } else {
                 cmd_invalid_arg("flags", command);
             }
