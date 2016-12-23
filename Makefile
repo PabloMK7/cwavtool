@@ -27,7 +27,7 @@ EXTRA_OUTPUT_FILES :=
 LIBRARY_DIRS :=
 LIBRARIES :=
 
-BUILD_FLAGS := -Wno-unused-result -Wno-sign-compare -Wno-misleading-indentation
+BUILD_FLAGS := -Wno-unused-result -Wno-sign-compare -Wno-misleading-indentation -Wno-unused-function
 RUN_FLAGS :=
 
 # 3DS CONFIGURATION #
