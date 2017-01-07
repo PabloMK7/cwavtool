@@ -3,13 +3,9 @@
 TARGET := NATIVE
 LIBRARY := 0
 
-ifeq ($(TARGET),3DS)
+ifeq ($(TARGET),$(filter $(TARGET),3DS WIIU))
     ifeq ($(strip $(DEVKITPRO)),)
         $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
-    endif
-
-    ifeq ($(strip $(DEVKITARM)),)
-        $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
     endif
 endif
 
@@ -28,25 +24,15 @@ LIBRARY_DIRS :=
 LIBRARIES :=
 
 BUILD_FLAGS := -Wno-unused-result -Wno-sign-compare -Wno-misleading-indentation -Wno-unused-function
+BUILD_FLAGS_CC :=
+BUILD_FLAGS_CXX :=
 RUN_FLAGS :=
 
-# 3DS CONFIGURATION #
+VERSION_PARTS := $(subst ., ,$(shell git describe --tags --abbrev=0))
 
-TITLE := $(NAME)
-DESCRIPTION :=
-AUTHOR :=
-PRODUCT_CODE :=
-UNIQUE_ID :=
-
-SYSTEM_MODE :=
-SYSTEM_MODE_EXT :=
-
-ICON_FLAGS :=
-
-ROMFS_DIR :=
-BANNER_AUDIO :=
-BANNER_IMAGE :=
-ICON :=
+VERSION_MAJOR := $(word 1, $(VERSION_PARTS))
+VERSION_MINOR := $(word 2, $(VERSION_PARTS))
+VERSION_MICRO := $(word 3, $(VERSION_PARTS))
 
 # INTERNAL #
 

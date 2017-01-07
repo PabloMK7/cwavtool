@@ -390,6 +390,7 @@ void cmd_print_commands() {
 }
 
 void cmd_print_usage(const std::string& executedFrom) {
+    printf("bannertool v%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
     printf("Usage: %s <command> <args>\n", executedFrom.c_str());
     cmd_print_commands();
 }
