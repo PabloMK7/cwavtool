@@ -45,7 +45,7 @@ u8* convert_to_cwav(const std::string& file, u32* size) {
             cwav.channels = wav->format.numChannels;
             cwav.sampleRate = wav->format.sampleRate;
             cwav.bitsPerSample = wav->format.bitsPerSample;
-            cwav.dataSize = wav->data.chunkSize;
+            cwav.dataSize = wav->data.size;
             cwav.data = wav->data.data;
 
             ret = cwav_build(cwav, size);
@@ -59,10 +59,10 @@ u8* convert_to_cwav(const std::string& file, u32* size) {
             stb_vorbis_info info = stb_vorbis_get_info(vorb);
 
             CWAV cwav;
-            cwav.channels = info.channels;
+            cwav.channels = (u32) info.channels;
             cwav.sampleRate = info.sample_rate;
             cwav.bitsPerSample = 16; // stb_vorbis always outputs 16 bit samples
-            int sampleCount = stb_vorbis_stream_length_in_samples(vorb) * info.channels;
+            u32 sampleCount = stb_vorbis_stream_length_in_samples(vorb) * info.channels;
             cwav.dataSize = sampleCount * 2;
             cwav.data = (u8*) calloc(sampleCount, 2);
             stb_vorbis_get_samples_short_interleaved(vorb, info.channels, (short*) cwav.data, sampleCount);

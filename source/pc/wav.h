@@ -8,30 +8,30 @@
 typedef struct {
     char chunkId[4];
     u32 chunkSize;
-    char format[4];
-} Riff;
+} WavChunkHeader;
 
 typedef struct {
-    char chunkId[4];
-    u32 chunkSize;
+    char format[4];
+} WavRiffChunk;
+
+typedef struct {
     u16 format;
     u16 numChannels;
     u32 sampleRate;
     u32 byteRate;
     u16 align;
     u16 bitsPerSample;
-} Format;
+} WavFormatChunk;
 
 typedef struct {
-    char chunkId[4];
-    u32 chunkSize;
+    u32 size;
     u8* data;
-} Data;
+} WavDataChunk;
 
 typedef struct {
-    Riff riff;
-    Format format;
-    Data data;
+    WavRiffChunk riff;
+    WavFormatChunk format;
+    WavDataChunk data;
 } WAV;
 
 WAV* wav_read(FILE* fd);

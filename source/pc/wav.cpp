@@ -4,17 +4,35 @@
 #include <string.h>
 #include <errno.h>
 
-bool wav_find_chunk(FILE* fd, const char* magic) {
-    char curr[5] = {0};
-    for(long pos = ftell(fd); strcmp(curr, magic) != 0; pos++) {
-        fseek(fd, pos, SEEK_SET);
-        size_t read = fread(curr, 1, 4, fd);
-        if(read <= 0) {
-            return false;
-        }
+typedef struct {
+    FILE* fd;
+    WavChunkHeader currChunk;
+    long currChunkDataPos;
+} WavContext;
+
+static bool wav_next_chunk(WavContext* context) {
+    if(fseek(context->fd, context->currChunkDataPos + (memcmp(context->currChunk.chunkId, "RIFF", 4) == 0 ? 4 : context->currChunk.chunkSize), SEEK_SET) < 0) {
+        return false;
     }
 
-    fseek(fd, -4, SEEK_CUR);
+    if(fread(&context->currChunk, sizeof(WavChunkHeader), 1, context->fd) <= 0) {
+        return false;
+    }
+
+    context->currChunkDataPos = ftell(context->fd);
+    return true;
+}
+
+static bool wav_read_chunk_data(WavContext* context, void* data, size_t maxSize) {
+    if(fseek(context->fd, context->currChunkDataPos, SEEK_SET) < 0) {
+        return false;
+    }
+
+    size_t size = context->currChunk.chunkSize < maxSize ? context->currChunk.chunkSize : maxSize;
+    if(fread(data, size, 1, context->fd) <= 0) {
+        return false;
+    }
+
     return true;
 }
 
@@ -24,43 +42,48 @@ WAV* wav_read(FILE* fd) {
         return NULL;
     }
 
-    if(!wav_find_chunk(fd, "RIFF")) {
-        printf("ERROR: Could not find WAV RIFF chunk.\n");
+    WAV* wav = (WAV*) calloc(1, sizeof(WAV));
+
+    WavContext context;
+    memset(&context, 0, sizeof(context));
+    context.fd = fd;
+
+    u32 foundChunks = 0;
+    while(wav_next_chunk(&context)) {
+        if(memcmp(context.currChunk.chunkId, "RIFF", 4) == 0) {
+            if(wav_read_chunk_data(&context, &wav->riff, sizeof(WavRiffChunk))) {
+                foundChunks++;
+            }
+        } else if(memcmp(context.currChunk.chunkId, "fmt ", 4) == 0) {
+            if(wav_read_chunk_data(&context, &wav->format, sizeof(WavFormatChunk))) {
+                foundChunks++;
+            }
+        } else if(memcmp(context.currChunk.chunkId, "data", 4) == 0) {
+            wav->data.size = context.currChunk.chunkSize;
+            wav->data.data = (u8*) malloc(wav->data.size);
+            if(wav_read_chunk_data(&context, wav->data.data, wav->data.size)) {
+                foundChunks++;
+            }
+        }
+    }
+
+    if(foundChunks != 3) {
+        wav_free(wav);
+
+        printf("ERROR: Failed to read WAV chunks: %s\n", errno != 0 ? strerror(errno) : "Not enough chunks.");
         return NULL;
     }
 
-    Riff riff;
-    fread(&riff, sizeof(Riff), 1, fd);
-
-    if(!wav_find_chunk(fd, "fmt ")) {
-        printf("ERROR: Could not find WAV format chunk.\n");
-        return NULL;
-    }
-
-    Format format;
-    fread(&format, sizeof(Format), 1, fd);
-
-    if(!wav_find_chunk(fd, "data")) {
-        printf("ERROR: Could not find WAV data chunk.\n");
-        return NULL;
-    }
-
-    Data data;
-    fread(&(data.chunkId), sizeof(data.chunkId), 1, fd);
-    fread(&(data.chunkSize), sizeof(data.chunkSize), 1, fd);
-    data.data = (u8*) malloc(data.chunkSize);
-    fread(data.data, 1, data.chunkSize, fd);
-
-    WAV* wav = (WAV*) malloc(sizeof(WAV));
-    wav->riff = riff;
-    wav->format = format;
-    wav->data = data;
     return wav;
 }
 
 void wav_free(WAV* wav) {
     if(wav != NULL) {
-        free(wav->data.data);
+        if(wav->data.data != NULL) {
+            free(wav->data.data);
+            wav->data.data = NULL;
+        }
+
         free(wav);
     }
 }
