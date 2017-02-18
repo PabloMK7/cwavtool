@@ -7,10 +7,15 @@ typedef struct {
     u32 channels;
     u32 sampleRate;
     u32 bitsPerSample;
+
+    bool loop;
+    u32 loopStartFrame;
+    u32 loopEndFrame;
+
     u32 dataSize;
-    u8* data;
+    void* data;
 } CWAV;
 
-u8* cwav_build(CWAV wav, u32* size);
+void* cwav_build(u32* size, CWAV wav);
 
 #endif

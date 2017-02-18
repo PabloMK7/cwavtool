@@ -3,6 +3,8 @@
 
 #include "../types.h"
 
+#define CBMD_NUM_CGFXS 14
+
 typedef enum {
     CGFX_COMMON,
     CGFX_EUR_ENGLISH,
@@ -21,13 +23,13 @@ typedef enum {
 } CBMDCGFX;
 
 typedef struct {
-    u8* cgfxs[14] = {NULL};
-    u32 cgfxSizes[14] = {0};
-    u8* cwav = NULL;
-    u32 cwavSize = 0;
+    void* cgfxs[CBMD_NUM_CGFXS];
+    u32 cgfxSizes[CBMD_NUM_CGFXS];
+    void* cwav;
+    u32 cwavSize;
 } CBMD;
 
-u8* cbmd_build(CBMD cbmd, u32* size);
-u8* bnr_build(CBMD cbmd, u32* size);
+void* cbmd_build(u32* size, CBMD cbmd);
+void* bnr_build(u32* size, CBMD cbmd);
 
 #endif

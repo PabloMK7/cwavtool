@@ -1,18 +1,12 @@
 #ifndef WAV_H
 #define WAV_H
 
-#include <stdio.h>
-
 #include "../types.h"
 
 typedef struct {
     char chunkId[4];
     u32 chunkSize;
 } WavChunkHeader;
-
-typedef struct {
-    char format[4];
-} WavRiffChunk;
 
 typedef struct {
     u16 format;
@@ -29,7 +23,6 @@ typedef struct {
 } WavDataChunk;
 
 typedef struct {
-    WavRiffChunk riff;
     WavFormatChunk format;
     WavDataChunk data;
 } WAV;

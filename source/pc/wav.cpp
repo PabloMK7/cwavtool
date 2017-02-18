@@ -1,8 +1,9 @@
 #include "wav.h"
 
+#include <sstream>
+
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 typedef struct {
     FILE* fd;
@@ -11,11 +12,11 @@ typedef struct {
 } WavContext;
 
 static bool wav_next_chunk(WavContext* context) {
-    if(fseek(context->fd, context->currChunkDataPos + (memcmp(context->currChunk.chunkId, "RIFF", 4) == 0 ? 4 : context->currChunk.chunkSize), SEEK_SET) < 0) {
+    if(fseek(context->fd, context->currChunkDataPos + (memcmp(context->currChunk.chunkId, "RIFF", 4) == 0 ? 4 : context->currChunk.chunkSize), SEEK_SET) != 0) {
         return false;
     }
 
-    if(fread(&context->currChunk, sizeof(WavChunkHeader), 1, context->fd) <= 0) {
+    if(fread(&context->currChunk, 1, sizeof(WavChunkHeader), context->fd) != sizeof(WavChunkHeader)) {
         return false;
     }
 
@@ -24,12 +25,12 @@ static bool wav_next_chunk(WavContext* context) {
 }
 
 static bool wav_read_chunk_data(WavContext* context, void* data, size_t maxSize) {
-    if(fseek(context->fd, context->currChunkDataPos, SEEK_SET) < 0) {
+    if(fseek(context->fd, context->currChunkDataPos, SEEK_SET) != 0) {
         return false;
     }
 
     size_t size = context->currChunk.chunkSize < maxSize ? context->currChunk.chunkSize : maxSize;
-    if(fread(data, size, 1, context->fd) <= 0) {
+    if(fread(data, 1, size, context->fd) != size) {
         return false;
     }
 
@@ -37,40 +38,90 @@ static bool wav_read_chunk_data(WavContext* context, void* data, size_t maxSize)
 }
 
 WAV* wav_read(FILE* fd) {
-    if(!fd) {
-        printf("ERROR: Could not open WAV file: %s\n", strerror(errno));
+    WAV* wav = (WAV*) calloc(1, sizeof(WAV));
+    if(wav == NULL) {
+        printf("ERROR: Could not allocate memory for WAV data.\n");
         return NULL;
     }
 
-    WAV* wav = (WAV*) calloc(1, sizeof(WAV));
+    char error[128] = {'\0'};
+    bool riff = false;
+    bool fmt = false;
+    bool data = false;
 
     WavContext context;
     memset(&context, 0, sizeof(context));
     context.fd = fd;
 
-    u32 foundChunks = 0;
-    while(wav_next_chunk(&context)) {
+    while(strlen(error) == 0 && (!riff || !fmt || !data) && wav_next_chunk(&context)) {
         if(memcmp(context.currChunk.chunkId, "RIFF", 4) == 0) {
-            if(wav_read_chunk_data(&context, &wav->riff, sizeof(WavRiffChunk))) {
-                foundChunks++;
+            riff = true;
+
+            char format[4];
+            if(wav_read_chunk_data(&context, format, sizeof(format))) {
+                if(memcmp(format, "WAVE", sizeof(format)) != 0) {
+                    strncpy(error, "ERROR: RIFF file is not of WAVE format", sizeof(error));
+                }
+            } else {
+                strncpy(error, "ERROR: Failed to read RIFF chunk data", sizeof(error));
             }
         } else if(memcmp(context.currChunk.chunkId, "fmt ", 4) == 0) {
-            if(wav_read_chunk_data(&context, &wav->format, sizeof(WavFormatChunk))) {
-                foundChunks++;
+            fmt = true;
+
+            if(!wav_read_chunk_data(&context, &wav->format, sizeof(WavFormatChunk))) {
+                strncpy(error, "ERROR: Failed to read fmt chunk data", sizeof(error));
             }
         } else if(memcmp(context.currChunk.chunkId, "data", 4) == 0) {
+            data = true;
+
             wav->data.size = context.currChunk.chunkSize;
             wav->data.data = (u8*) malloc(wav->data.size);
-            if(wav_read_chunk_data(&context, wav->data.data, wav->data.size)) {
-                foundChunks++;
+            if(wav->data.data != NULL) {
+                if(!wav_read_chunk_data(&context, wav->data.data, wav->data.size)) {
+                    strncpy(error, "ERROR: Failed to read data chunk data", sizeof(error));
+                }
+            } else {
+                strncpy(error, "ERROR: Could not allocate memory for WAV samples", sizeof(error));
             }
         }
     }
 
-    if(foundChunks != 3) {
+    if(strlen(error) == 0 && (!riff || !fmt || !data)) {
+        std::stringstream stream;
+        stream << "ERROR: Missing one or more WAV chunks: ";
+
+        if(!riff) {
+            stream << "RIFF";
+        }
+
+        if(!fmt) {
+            if(!riff) {
+                stream << ", ";
+            }
+
+            stream << "fmt";
+        }
+
+        if(!data) {
+            if(!riff || !fmt) {
+                stream << ", ";
+            }
+
+            stream << "data";
+        }
+
+        strncpy(error, stream.str().c_str(), sizeof(error));
+    }
+
+    if(strlen(error) > 0) {
         wav_free(wav);
 
-        printf("ERROR: Failed to read WAV chunks: %s\n", errno != 0 ? strerror(errno) : "Not enough chunks.");
+        if(errno != 0) {
+            perror(error);
+        } else {
+            printf("%s.\n", error);
+        }
+
         return NULL;
     }
 

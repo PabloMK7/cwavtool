@@ -1,6 +1,5 @@
 #include "lz11.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -46,8 +45,8 @@ int lz11_get_occurence_length(u8* newPtr, int newLength, u8* oldPtr, int oldLeng
     return maxLength;
 }
 
-u8* lz11_compress(u8* input, u32 inputSize, u32* size) {
-    if (inputSize > 0xFFFFFF) {
+void* lz11_compress(u32* size, void* input, u32 inputSize) {
+    if(inputSize > 0xFFFFFF) {
         printf("ERROR: LZ11 input is too large.\n");
         return NULL;
     }
@@ -74,9 +73,9 @@ u8* lz11_compress(u8* input, u32 inputSize, u32* size) {
 
         int disp = 0;
         int oldLength = MIN(readBytes, 0x1000);
-        int length = lz11_get_occurence_length(input + readBytes, MIN(inputSize - readBytes, 0x10110), input + readBytes - oldLength, oldLength, &disp);
+        int length = lz11_get_occurence_length((u8*) input + readBytes, MIN(inputSize - readBytes, 0x10110), (u8*) input + readBytes - oldLength, oldLength, &disp);
         if(length < 3) {
-            outbuffer[bufferlength++] = *(input + (readBytes++));
+            outbuffer[bufferlength++] = *((u8*) input + (readBytes++));
         } else {
             readBytes += length;
             outbuffer[0] |= (u8)(1 << (7 - bufferedBlocks));
@@ -119,9 +118,12 @@ u8* lz11_compress(u8* input, u32 inputSize, u32* size) {
         compressedLength += padLength;
     }
 
-    u8* buf = (u8*) malloc((size_t) compressedLength);
+    void* buf = malloc((size_t) compressedLength);
     ss.read((char*) buf, compressedLength);
 
-    *size = (u32) compressedLength;
+    if(size != NULL) {
+        *size = (u32) compressedLength;
+    }
+
     return buf;
 }
