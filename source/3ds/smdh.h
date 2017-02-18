@@ -3,6 +3,8 @@
 
 #include "../types.h"
 
+#define SMDH_MAGIC "SMDH"
+
 #define SMDH_NUM_LANGUAGE_SLOTS 16
 #define SMDH_NUM_VALID_LANGUAGE_SLOTS 12
 

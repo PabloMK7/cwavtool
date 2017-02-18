@@ -617,7 +617,7 @@ int cmd_process_command(int argc, char* argv[]) {
         SMDH smdh;
         memset(&smdh, 0, sizeof(smdh));
 
-        memcpy(smdh.magic, "SMDH", sizeof(smdh.magic));
+        memcpy(smdh.magic, SMDH_MAGIC, sizeof(smdh.magic));
 
         static const char* shortTitleShortArgs[SMDH_NUM_VALID_LANGUAGE_SLOTS] = {"js", "es", "fs", "gs", "is", "ss", "scs", "ks", "ds", "ps", "rs", "tcs"};
         static const char* shortTitleLongArgs[SMDH_NUM_VALID_LANGUAGE_SLOTS] = {"japaneseshorttitle", "englishshorttitle", "frenchshorttitle", "germanshorttitle", "italianshorttitle", "spanishshorttitle", "simplifiedchineseshorttitle", "koreanshorttitle", "dutchshorttitle", "portugueseshorttitle", "russianshorttitle", "traditionalchineseshorttitle"};

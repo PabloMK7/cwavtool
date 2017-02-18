@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CBMD_MAGIC "CBMD"
+
 typedef struct {
     char magic[4];
     u32 zero;
@@ -17,7 +19,7 @@ static void* cbmd_build_data(u32* size, CBMD cbmd, bool bnr) {
     CBMDHeader header;
     memset(&header, 0, sizeof(header));
 
-    memcpy(header.magic, "CBMD", sizeof(header.magic));
+    memcpy(header.magic, CBMD_MAGIC, sizeof(header.magic));
 
     u32 outputSize = sizeof(CBMDHeader);
 
