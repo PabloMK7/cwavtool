@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 

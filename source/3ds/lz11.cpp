@@ -9,7 +9,7 @@
 
 // Ported from: https://github.com/svn2github/3DS-Explorer/blob/master/3DSExplorer/DSDecmp/Formats/Nitro/LZ11.cs
 
-int lz11_get_occurence_length(u8* newPtr, int newLength, u8* oldPtr, int oldLength, int* disp) {
+u32 lz11_get_occurence_length(u8* newPtr, u32 newLength, u8* oldPtr, u32 oldLength, u32* disp) {
     if(disp != NULL) {
         *disp = 0;
     }
@@ -18,11 +18,11 @@ int lz11_get_occurence_length(u8* newPtr, int newLength, u8* oldPtr, int oldLeng
         return 0;
     }
 
-    int maxLength = 0;
-    for(int i = 0; i < oldLength - 1; i++) {
+    u32 maxLength = 0;
+    for(u32 i = 0; i < oldLength - 1; i++) {
         u8* currentOldStart = oldPtr + i;
-        int currentLength = 0;
-        for(int j = 0; j < newLength; j++) {
+        u32 currentLength = 0;
+        for(u32 j = 0; j < newLength; j++) {
             if(*(currentOldStart + j) != *(newPtr + j)) {
                 break;
             }
@@ -56,12 +56,12 @@ void* lz11_compress(u32* size, void* input, u32 inputSize) {
     u8 header[4] = { 0x11, (u8) (inputSize & 0xFF), (u8) ((inputSize >> 8) & 0xFF), (u8) ((inputSize >> 16) & 0xFF) };
     ss.write((char*) header, 4);
 
-    int compressedLength = 4;
+    u32 compressedLength = 4;
     u8 outbuffer[8 * 4 + 1];
     outbuffer[0] = 0;
-    int bufferlength = 1;
-    int bufferedBlocks = 0;
-    int readBytes = 0;
+    u32 bufferlength = 1;
+    u32 bufferedBlocks = 0;
+    u32 readBytes = 0;
     while(readBytes < inputSize) {
         if(bufferedBlocks == 8) {
             ss.write((char*) outbuffer, bufferlength);
@@ -71,9 +71,9 @@ void* lz11_compress(u32* size, void* input, u32 inputSize) {
             bufferedBlocks = 0;
         }
 
-        int disp = 0;
-        int oldLength = MIN(readBytes, 0x1000);
-        int length = lz11_get_occurence_length((u8*) input + readBytes, MIN(inputSize - readBytes, 0x10110), (u8*) input + readBytes - oldLength, oldLength, &disp);
+        u32 disp = 0;
+        u32 oldLength = MIN(readBytes, 0x1000);
+        u32 length = lz11_get_occurence_length((u8*) input + readBytes, MIN(inputSize - readBytes, 0x10110), (u8*) input + readBytes - oldLength, oldLength, &disp);
         if(length < 3) {
             outbuffer[bufferlength++] = *((u8*) input + (readBytes++));
         } else {
@@ -110,7 +110,7 @@ void* lz11_compress(u32* size, void* input, u32 inputSize) {
     }
 
     if(compressedLength % 4 != 0) {
-        int padLength = 4 - (compressedLength % 4);
+        u32 padLength = 4 - (compressedLength % 4);
         u8 pad[padLength];
         memset(pad, 0, (size_t) padLength);
 

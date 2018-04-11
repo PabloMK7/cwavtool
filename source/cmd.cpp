@@ -50,7 +50,7 @@ static void* read_file(u32* size, const std::string& file) {
         return NULL;
     }
 
-    u32 bufferSize = (u32) tell;
+    size_t bufferSize = (size_t) tell;
     void* buffer = malloc(bufferSize);
     if(buffer == NULL) {
         fclose(fd);
@@ -59,7 +59,7 @@ static void* read_file(u32* size, const std::string& file) {
         return NULL;
     }
 
-    long readRet = fread(buffer, 1, bufferSize, fd);
+    size_t readRet = fread(buffer, 1, bufferSize, fd);
 
     fclose(fd);
 
@@ -84,7 +84,7 @@ static bool write_file(void* contents, u32 size, const std::string& file) {
         return false;
     }
 
-    long writeRet = fwrite(contents, 1, size, fd);
+    size_t writeRet = fwrite(contents, 1, size, fd);
 
     fclose(fd);
 
@@ -114,7 +114,7 @@ static void* load_image(const std::string& file, u32 width, u32 height) {
         height = (u32) imgHeight;
     }
 
-    if(imgWidth != width || imgHeight != height) {
+    if((u32) imgWidth != width || (u32) imgHeight != height) {
         stbi_image_free(img);
 
         printf("ERROR: Image must be exactly %d x %d in size.\n", width, height);
