@@ -121,13 +121,6 @@ static void* load_image(const std::string& file, u32 width, u32 height) {
         return NULL;
     }
 
-    if(imgDepth != STBI_rgb_alpha) {
-        stbi_image_free(img);
-
-        printf("ERROR: Decoded image does't match expected format (%d, wanted %d).\n", imgDepth, STBI_rgb_alpha);
-        return NULL;
-    }
-
     return img;
 }
 
