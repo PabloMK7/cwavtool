@@ -19,25 +19,27 @@ u32 lz11_get_occurence_length(u8* newPtr, u32 newLength, u8* oldPtr, u32 oldLeng
     }
 
     u32 maxLength = 0;
-    for(u32 i = 0; i < oldLength - 1; i++) {
-        u8* currentOldStart = oldPtr + i;
-        u32 currentLength = 0;
-        for(u32 j = 0; j < newLength; j++) {
-            if(*(currentOldStart + j) != *(newPtr + j)) {
-                break;
+    if(oldLength > 0) {
+        for(u32 i = 0; i < oldLength - 1; i++) {
+            u8* currentOldStart = oldPtr + i;
+            u32 currentLength = 0;
+            for(u32 j = 0; j < newLength; j++) {
+                if(*(currentOldStart + j) != *(newPtr + j)) {
+                    break;
+                }
+
+                currentLength++;
             }
 
-            currentLength++;
-        }
+            if(currentLength > maxLength) {
+                maxLength = currentLength;
+                if(disp != NULL) {
+                    *disp = oldLength - i;
+                }
 
-        if(currentLength > maxLength) {
-            maxLength = currentLength;
-            if(disp != NULL) {
-                *disp = oldLength - i;
-            }
-
-            if(maxLength == newLength) {
-                break;
+                if(maxLength == newLength) {
+                    break;
+                }
             }
         }
     }
