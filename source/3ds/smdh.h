@@ -76,7 +76,8 @@ typedef struct {
 typedef struct {
     u8 gameRatings[SMDH_NUM_RATING_SLOTS];
     u32 regionLock;
-    u8 matchMakerId[0xC];
+    u32 matchMakerId;
+    u64 matchMakerBitId;
     u32 flags;
     u16 eulaVersion;
     u16 reserved1;

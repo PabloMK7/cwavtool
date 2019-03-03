@@ -504,6 +504,7 @@ static void cmd_print_info(const std::string& command) {
         printf("  -f/--flags: Optional. Flags to apply to the SMDH file.\n");
         printf("     Valid flags: visible, autoboot, allow3d, requireeula, autosave, extendedbanner, ratingrequired, savedata, recordusage, nosavebackups, new3ds.\n");
         printf("  -mmid/--matchmakerid: Optional. Match maker ID of the SMDH.\n");
+        printf("  -mmbid/--matchmakerbitid: Optional. Match maker BIT ID of the SMDH.\n");
         printf("  -ev/--eulaversion: Optional. Version of the EULA required to be accepted before launching.\n");
         printf("  -obf/--optimalbannerframe: Optional. Optimal frame of the accompanying banner.\n");
         printf("  -spid/--streetpassid: Optional. Streetpass ID of the SMDH.\n");
@@ -709,12 +710,12 @@ int cmd_process_command(int argc, char* argv[]) {
             }
         }
 
-        u64 matchMakerId = (u64) atoll(cmd_find_arg(args, "mmid", "matchmakerid", "0").c_str());
-        memcpy(smdh.settings.matchMakerId, &matchMakerId, 0xC);
+        smdh.settings.matchMakerId = (u32) atoi(cmd_find_arg(args, "mmid", "matchmakerid", "0").c_str());
+        smdh.settings.matchMakerBitId = (u64) atoll(cmd_find_arg(args, "mmbid", "matchmakerbitid", "0").c_str());
 
         smdh.settings.eulaVersion = (u16) atoi(cmd_find_arg(args, "ev", "eulaversion", "0").c_str());
-        smdh.settings.optimalBannerFrame = (u32) atoll(cmd_find_arg(args, "obf", "optimalbannerframe", "0").c_str());
-        smdh.settings.streetpassId = (u32) atoll(cmd_find_arg(args, "spid", "streetpassid", "0").c_str());
+        smdh.settings.optimalBannerFrame = (u32) atoi(cmd_find_arg(args, "obf", "optimalbannerframe", "0").c_str());
+        smdh.settings.streetpassId = (u32) atoi(cmd_find_arg(args, "spid", "streetpassid", "0").c_str());
 
         smdh.settings.gameRatings[SMDH_RATING_CERO] = (u8) atoi(cmd_find_arg(args, "cer", "cero", "0").c_str());
         smdh.settings.gameRatings[SMDH_RATING_ESRB] = (u8) atoi(cmd_find_arg(args, "er", "esrb", "0").c_str());
@@ -731,8 +732,8 @@ int cmd_process_command(int argc, char* argv[]) {
         const std::string input = cmd_find_arg(args, "i", "input", "");
         const std::string output = cmd_find_arg(args, "o", "output", "");
         std::string loop = cmd_find_arg(args, "l", "loop", "false");
-        u32 loopStartFrame = (u32) atol(cmd_find_arg(args, "s", "loopstartframe", "0").c_str());
-        u32 loopEndFrame = (u32) atol(cmd_find_arg(args, "e", "loopendframe", "0").c_str());
+        u32 loopStartFrame = (u32) atoi(cmd_find_arg(args, "s", "loopstartframe", "0").c_str());
+        u32 loopEndFrame = (u32) atoi(cmd_find_arg(args, "e", "loopendframe", "0").c_str());
         if(input.empty() || output.empty()) {
             cmd_missing_args(command);
             return -1;
