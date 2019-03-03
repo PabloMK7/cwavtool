@@ -1,6 +1,7 @@
 #include "wav.h"
 
 #include <sstream>
+#include <string>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -45,7 +46,7 @@ WAV* wav_read(FILE* fd) {
         return NULL;
     }
 
-    char error[128] = {'\0'};
+    std::string error = "";
     bool riff = false;
     bool fmt = false;
     bool data = false;
@@ -54,23 +55,23 @@ WAV* wav_read(FILE* fd) {
     memset(&context, 0, sizeof(context));
     context.fd = fd;
 
-    while(strlen(error) == 0 && (!riff || !fmt || !data) && wav_next_chunk(&context)) {
+    while(error.empty() && (!riff || !fmt || !data) && wav_next_chunk(&context)) {
         if(memcmp(context.currChunk.chunkId, "RIFF", 4) == 0) {
             riff = true;
 
             char format[4];
             if(wav_read_chunk_data(&context, format, sizeof(format))) {
                 if(memcmp(format, "WAVE", sizeof(format)) != 0) {
-                    strncpy(error, "ERROR: RIFF file is not of WAVE format", sizeof(error));
+                    error = "ERROR: RIFF file is not of WAVE format";
                 }
             } else {
-                strncpy(error, "ERROR: Failed to read RIFF chunk data", sizeof(error));
+                error = "ERROR: Failed to read RIFF chunk data";
             }
         } else if(memcmp(context.currChunk.chunkId, "fmt ", 4) == 0) {
             fmt = true;
 
             if(!wav_read_chunk_data(&context, &wav->format, sizeof(WavFormatChunk))) {
-                strncpy(error, "ERROR: Failed to read fmt chunk data", sizeof(error));
+                error = "ERROR: Failed to read fmt chunk data";
             }
         } else if(memcmp(context.currChunk.chunkId, "data", 4) == 0) {
             data = true;
@@ -79,15 +80,15 @@ WAV* wav_read(FILE* fd) {
             wav->data.data = (u8*) malloc(wav->data.size);
             if(wav->data.data != NULL) {
                 if(!wav_read_chunk_data(&context, wav->data.data, wav->data.size)) {
-                    strncpy(error, "ERROR: Failed to read data chunk data", sizeof(error));
+                    error = "ERROR: Failed to read data chunk data";
                 }
             } else {
-                strncpy(error, "ERROR: Could not allocate memory for WAV samples", sizeof(error));
+                error = "ERROR: Could not allocate memory for WAV samples";
             }
         }
     }
 
-    if(strlen(error) == 0 && (!riff || !fmt || !data)) {
+    if(error.empty() && (!riff || !fmt || !data)) {
         std::stringstream stream;
         stream << "ERROR: Missing one or more WAV chunks: ";
 
@@ -111,16 +112,16 @@ WAV* wav_read(FILE* fd) {
             stream << "data";
         }
 
-        strncpy(error, stream.str().c_str(), sizeof(error));
+        error = stream.str();
     }
 
-    if(strlen(error) > 0) {
+    if(!error.empty()) {
         wav_free(wav);
 
         if(errno != 0) {
-            perror(error);
+            perror(error.c_str());
         } else {
-            printf("%s.\n", error);
+            printf("%s.\n", error.c_str());
         }
 
         return NULL;
