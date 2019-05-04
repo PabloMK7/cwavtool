@@ -13,6 +13,8 @@
 #include <string.h>
 
 #include <algorithm>
+#include <codecvt>
+#include <locale>
 #include <map>
 #include <vector>
 
@@ -21,18 +23,20 @@ typedef enum {
     RGBA4444
 } PixelFormat;
 
-static void utf8_to_utf16(u16* dst, const char* src, size_t maxLen) {
+static void utf8_to_utf16(u16* dst, const std::string& src, size_t maxLen) {
     if(maxLen == 0) {
         return;
     }
 
-    size_t n = 0;
-    while(src[n]) {
-        dst[n] = (u16) src[n];
-        if(n++ >= maxLen) {
-            return;
-        }
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+    std::u16string str16 = converter.from_bytes(src.data());
+
+    size_t copyLen = str16.length() * sizeof(char16_t);
+    if(copyLen > maxLen) {
+        copyLen = maxLen;
     }
+
+    memcpy(dst, str16.data(), copyLen);
 }
 
 static void* read_file(u32* size, const std::string& file) {
@@ -643,9 +647,9 @@ int cmd_process_command(int argc, char* argv[]) {
             longTitleFound = longTitleFound || !currLongTitle.empty();
             publisherFound = publisherFound || !currPublisher.empty();
 
-            utf8_to_utf16(smdh.titles[i].shortTitle, currShortTitle.c_str(), sizeof(smdh.titles[i].shortTitle) / 2);
-            utf8_to_utf16(smdh.titles[i].longTitle, currLongTitle.c_str(), sizeof(smdh.titles[i].longTitle) / 2);
-            utf8_to_utf16(smdh.titles[i].publisher, currPublisher.c_str(), sizeof(smdh.titles[i].publisher) / 2);
+            utf8_to_utf16(smdh.titles[i].shortTitle, currShortTitle, sizeof(smdh.titles[i].shortTitle) / 2);
+            utf8_to_utf16(smdh.titles[i].longTitle, currLongTitle, sizeof(smdh.titles[i].longTitle) / 2);
+            utf8_to_utf16(smdh.titles[i].publisher, currPublisher, sizeof(smdh.titles[i].publisher) / 2);
         }
 
         if(!shortTitleFound || !longTitleFound || !publisherFound) {
