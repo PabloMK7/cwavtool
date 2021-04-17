@@ -1,6 +1,6 @@
 # cwavtool
 
-A tool for converting **WAV/OGG** files to **(B)CWAV** files.
+A tool for converting **WAV/OGG** files to [**(B)CWAV**](https://www.3dbrew.org/wiki/BCWAV) files.
 
 ## Usage
 
@@ -16,6 +16,6 @@ Available arguments:
 ```
 
 ## Credits & License
-- This project is a modified work of [Steviece10's bannertool](https://github.com/Steveice10/bannertool) and is licensed under the [MIT License](LICENSE.txt).
-- This project uses [David Bryant's adpcm-xq](https://github.com/dbry/adpcm-xq) for IMA-ADPCM encoding ([License](source/3ds/imaadpcm/LICENSE.txt)).
-- This project uses [Jack Andersen's gc-dspadpcm-encode](https://github.com/jackoalan/gc-dspadpcm-encode) for DSP-ADPCM encoding ([License](source/3ds/dspadpcm/LICENSE.txt)).
+- This project is a modified work of [Steviece10's bannertool](https://github.com/Steveice10/bannertool) and is licensed under the [MIT License](LICENSE).
+- This project uses [David Bryant's adpcm-xq](https://github.com/dbry/adpcm-xq) for IMA-ADPCM encoding ([License](source/3ds/imaadpcm/LICENSE)).
+- This project uses [Jack Andersen's gc-dspadpcm-encode](https://github.com/jackoalan/gc-dspadpcm-encode) for DSP-ADPCM encoding ([License](source/3ds/dspadpcm/LICENSE)).
