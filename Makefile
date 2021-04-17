@@ -11,7 +11,7 @@ endif
 
 # COMMON CONFIGURATION #
 
-NAME := bannertool
+NAME := cwavtool
 
 BUILD_DIR := build
 OUTPUT_DIR := output
